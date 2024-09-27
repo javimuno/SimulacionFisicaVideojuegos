@@ -7,8 +7,10 @@
 #include "core.hpp"
 #include "RenderUtils.hpp"
 #include "callbacks.hpp"
+#include "Particle.h"
 
 #include <iostream>
+
 
 std::string display_text = "This is a test";
 
@@ -28,6 +30,8 @@ PxPvd*                  gPvd        = NULL;
 
 PxDefaultCpuDispatcher*	gDispatcher = NULL;
 PxScene*				gScene      = NULL;
+Particle* p = NULL; //nueva particula
+
 ContactReportCallback gContactReportCallback;
 
 
@@ -123,6 +127,10 @@ void initPhysics(bool interactive)
 	RenderItem* whiteRenderItem = new RenderItem(sphereShape, whiteActor, PxVec4(1.0f, 1.0f, 1.0f, 1.0f));  // Color blanco
 	RegisterRenderItem(whiteRenderItem);
 
+
+	p = new Particle({ 0,0,0 }, { .5,0,0 });
+
+
 	}
 
 
@@ -135,6 +143,7 @@ void stepPhysics(bool interactive, double t)
 
 	gScene->simulate(t);
 	gScene->fetchResults(true);
+	p->integrate(.003);
 }
 
 // Function to clean data
