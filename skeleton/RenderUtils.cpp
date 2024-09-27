@@ -4,6 +4,7 @@
 
 #include "core.hpp"
 #include "RenderUtils.hpp"
+#include "Vector3D.h"
 
 
 using namespace physx;
@@ -14,12 +15,45 @@ extern void cleanupPhysics(bool interactive);
 extern void keyPress(unsigned char key, const PxTransform& camera);
 extern PxPhysics* gPhysics;
 extern PxMaterial* gMaterial;
+extern PxScene* gScene; // para la escenafisica
 
 std::vector<const RenderItem*> gRenderItems;
 
 double PCFreq = 0.0;
 __int64 CounterStart = 0;
 __int64 CounterLast = 0;
+
+////paradibujar los ejes
+//
+//void drawCoordinateAxes() {
+//	// Crear las geometrías de las líneas de los ejes
+//	PxBoxGeometry axisGeometry(PxVec3(0.1f, 0.1f, 10.0f)); // Ejes con longitud 20 (extensión en Z)
+//
+//	// Eje X (rojo)
+//	PxRigidStatic* xAxisActor = gPhysics->createRigidStatic(PxTransform(PxVec3(10, 0, 0)));  // Posición en el espacio
+//	PxShape* xAxisShape = CreateShape(axisGeometry, gMaterial);
+//	xAxisActor->attachShape(*xAxisShape);
+//	gScene->addActor(*xAxisActor);
+//	RenderItem* xAxisRenderItem = new RenderItem(xAxisShape, xAxisActor, PxVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Color rojo
+//	RegisterRenderItem(xAxisRenderItem);
+//
+//	// Eje Y (verde)
+//	PxRigidStatic* yAxisActor = gPhysics->createRigidStatic(PxTransform(PxVec3(0, 10, 0)));
+//	PxShape* yAxisShape = CreateShape(axisGeometry, gMaterial);
+//	yAxisActor->attachShape(*yAxisShape);
+//	gScene->addActor(*yAxisActor);
+//	RenderItem* yAxisRenderItem = new RenderItem(yAxisShape, yAxisActor, PxVec4(0.0f, 1.0f, 0.0f, 1.0f)); // Color verde
+//	RegisterRenderItem(yAxisRenderItem);
+//
+//	// Eje Z (azul)
+//	PxRigidStatic* zAxisActor = gPhysics->createRigidStatic(PxTransform(PxVec3(0, 0, 10)));
+//	PxShape* zAxisShape = CreateShape(axisGeometry, gMaterial);
+//	zAxisActor->attachShape(*zAxisShape);
+//	gScene->addActor(*zAxisActor);
+//	RenderItem* zAxisRenderItem = new RenderItem(zAxisShape, zAxisActor, PxVec4(0.0f, 0.0f, 1.0f, 1.0f)); // Color azul
+//	RegisterRenderItem(zAxisRenderItem);
+//}
+
 
 void StartCounter()
 {
@@ -185,3 +219,5 @@ PxShape* CreateShape(const PxGeometry& geo, const PxMaterial* mat)
 	PxShape* shape = gPhysics->createShape(geo, *mat);
 	return shape;
 }
+
+

@@ -31,6 +31,8 @@ PxScene*				gScene      = NULL;
 ContactReportCallback gContactReportCallback;
 
 
+
+
 // Initialize physics engine
 void initPhysics(bool interactive)
 {
@@ -54,6 +56,73 @@ void initPhysics(bool interactive)
 	sceneDesc.filterShader = contactReportFilterShader;
 	sceneDesc.simulationEventCallback = &gContactReportCallback;
 	gScene = gPhysics->createScene(sceneDesc);
+
+	
+
+	//// Crear la geometría de la esfera
+	//PxSphereGeometry sphereGeometry(1.0f);  // Esfera con un radio de 1.0
+
+	//// Crear un material para la esfera
+	//PxMaterial* sphereMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+
+	//// Crear el shape (forma) usando CreateShape
+	//PxShape* sphereShape = CreateShape(sphereGeometry, sphereMaterial);
+
+	//// Crear un actor dinámico (la esfera puede moverse)
+	////PxRigidDynamic* sphereActor = gPhysics->createRigidDynamic(PxTransform(PxVec3(0, 10, 0)));  // Posición inicial en (0, 10, 0)
+
+	//// Crear un actor estático (la esfera no se mueve)
+	//PxRigidStatic* sphereActor = gPhysics->createRigidStatic(PxTransform(PxVec3(0, 0, 0)));  // Posición en el origen (0, 0, 0)
+
+	//// Adjuntar la forma al actor
+	//sphereActor->attachShape(*sphereShape);
+
+	//// Añadir el actor a la escena física
+	//gScene->addActor(*sphereActor);
+
+	//// Crear el render item y registrarlo para que se muestre en la escena gráfica
+	//RenderItem* sphereRenderItem = new RenderItem(sphereShape, sphereActor, PxVec4(1.0f, 0.0f, 0.0f, 1.0f));  // Color rojo
+	//RegisterRenderItem(sphereRenderItem);
+
+
+
+	// 1. Pelota Roja (Origen)
+	PxSphereGeometry sphereGeometry(1.0f);
+	PxMaterial* sphereMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+	PxShape* sphereShape = CreateShape(sphereGeometry, sphereMaterial);
+	PxRigidStatic* sphereActor = gPhysics->createRigidStatic(PxTransform(PxVec3(0, 0, 0)));
+	sphereActor->attachShape(*sphereShape);
+	gScene->addActor(*sphereActor);
+	RenderItem* sphereRenderItem = new RenderItem(sphereShape, sphereActor, PxVec4(1.0f, 0.0f, 0.0f, 1.0f));  // Color rojo
+	RegisterRenderItem(sphereRenderItem);
+
+	// 2. Crear los vectores posición
+	Vector3D redPosition(0.0f, 0.0f, 0.0f);  // Pelota roja en el origen
+	Vector3D greenPosition = redPosition + Vector3D(0.0f, 10.0f, 0.0f);  // Pelota verde en eje Y
+	Vector3D bluePosition = redPosition + Vector3D(0.0f, 0.0f, 10.0f); // Pelota azul en eje Z
+	Vector3D whitePosition = redPosition + Vector3D(10.0f, 0.0f, 0.0f); // Pelota blanca en eje X
+
+	// 3. Crear la pelota verde en eje Y
+	PxRigidStatic* greenActor = gPhysics->createRigidStatic(PxTransform(PxVec3(greenPosition.x, greenPosition.y, greenPosition.z)));
+	greenActor->attachShape(*sphereShape);
+	gScene->addActor(*greenActor);
+	RenderItem* greenRenderItem = new RenderItem(sphereShape, greenActor, PxVec4(0.0f, 1.0f, 0.0f, 1.0f));  // Color verde
+	RegisterRenderItem(greenRenderItem);
+
+	// 4. Crear la pelota azul en eje Z
+	PxRigidStatic* blueActor = gPhysics->createRigidStatic(PxTransform(PxVec3(bluePosition.x, bluePosition.y, bluePosition.z)));
+	blueActor->attachShape(*sphereShape);
+	gScene->addActor(*blueActor);
+	RenderItem* blueRenderItem = new RenderItem(sphereShape, blueActor, PxVec4(0.0f, 0.0f, 1.0f, 1.0f));  // Color azul
+	RegisterRenderItem(blueRenderItem);
+
+	// 5. Crear la pelota blanca en eje X
+	PxRigidStatic* whiteActor = gPhysics->createRigidStatic(PxTransform(PxVec3(whitePosition.x, whitePosition.y, whitePosition.z)));
+	whiteActor->attachShape(*sphereShape);
+	gScene->addActor(*whiteActor);
+	RenderItem* whiteRenderItem = new RenderItem(sphereShape, whiteActor, PxVec4(1.0f, 1.0f, 1.0f, 1.0f));  // Color blanco
+	RegisterRenderItem(whiteRenderItem);
+
 	}
 
 

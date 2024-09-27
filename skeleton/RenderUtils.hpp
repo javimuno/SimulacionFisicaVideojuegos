@@ -3,10 +3,12 @@
 
 #include "PxPhysicsAPI.h"
 #include "core.hpp"
+#include "Vector3D.h"
 
 class RenderItem;
 void RegisterRenderItem(const RenderItem* _item);
 void DeregisterRenderItem(const RenderItem* _item);
+//void drawCoordinateAxes();
 
 class RenderItem
 {
@@ -49,6 +51,8 @@ public:
 			delete this;
 		}
 	}
+	
+
 
 public:
 	physx::PxShape* shape;
