@@ -127,8 +127,12 @@ void initPhysics(bool interactive)
 	RenderItem* whiteRenderItem = new RenderItem(sphereShape, whiteActor, PxVec4(1.0f, 1.0f, 1.0f, 1.0f));  // Color blanco
 	RegisterRenderItem(whiteRenderItem);
 
+	// particula (2)
+	//p = new Particle({ 0,0,0 }, { .5,0,0 });
 
-	p = new Particle({ 0,0,0 }, { .5,0,0 });
+	//particula (3)
+	p = new Particle({ 0,0,0 }, { 1,0,0 }, { 0,0.05,0.05 }, 0.99f);
+
 
 
 	}
@@ -143,7 +147,7 @@ void stepPhysics(bool interactive, double t)
 
 	gScene->simulate(t);
 	gScene->fetchResults(true);
-	p->integrate(.003);
+	p->integrate(0.01); //llamada para vel cte
 }
 
 // Function to clean data
