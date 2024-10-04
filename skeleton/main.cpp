@@ -31,6 +31,8 @@ PxPvd*                  gPvd        = NULL;
 PxDefaultCpuDispatcher*	gDispatcher = NULL;
 PxScene*				gScene      = NULL;
 Particle* p = NULL; //nueva particula
+Particle* p1 = NULL; //nueva particula Euler Semi
+Particle* p2= NULL; //nueva particula Verlet
 
 ContactReportCallback gContactReportCallback;
 
@@ -134,6 +136,11 @@ void initPhysics(bool interactive)
 	p = new Particle({ 0,0,0 }, { 1,0,0 }, { 0,0.05,0.05 }, 0.99f);
 
 
+	//particulas Euler Semi-implicito y Verlet
+	Particle* p1 = new Particle({ 0,3,0 }, { 0.5,0,0 }, { 0,0.5,0 }, 0.99f,true);  // Esta partícula usa semi-implícito
+	Particle* p2 = new Particle({ 0,0,3 }, { 0.5,0,0 }, { 0,0.5,0 }, 0.99f,true);  // Esta partícula usa Verlet
+
+
 
 	}
 
@@ -147,7 +154,9 @@ void stepPhysics(bool interactive, double t)
 
 	gScene->simulate(t);
 	gScene->fetchResults(true);
-	p->integrate(0.01); //llamada para vel cte
+	p->integrate(0.01); //Partícula para (2) y (3)
+	//p1->integrateSemiImplicitEuler(0.01);  // Partícula Euler (4)
+	p2->integrateVerlet(0.016);  // Partícula Verlet
 }
 
 // Function to clean data
