@@ -34,7 +34,8 @@ PxScene*				gScene      = NULL;
 Particle* p = nullptr; //nueva particula
 Particle* p1 = nullptr; //nueva particula Euler Semi
 Particle* p2= nullptr; //nueva particula Verlet
-Projectile* projectile = nullptr;
+Projectile* projectile = nullptr; //bala
+std::vector<Projectile*> projectiles; //array para las balas
 
 ContactReportCallback gContactReportCallback;
 
@@ -153,6 +154,8 @@ void initPhysics(bool interactive)
 
 	projectile = new Projectile(initialPos, initialVel, gravity, mass);
 
+	
+
 
 	}
 
@@ -170,8 +173,14 @@ void stepPhysics(bool interactive, double t)
 	//p1->integrateSemiImplicitEuler(0.01);  // Partícula Euler (4)
 	//p2->integrateVerlet(0.016);  // Partícula Verlet
 
+	//proyectiles creados en ini
 	if (projectile) {
 		projectile->integrate(t);
+	}
+
+	//para disparar proyectiles
+	for (auto& proj : projectiles) {
+		proj->integrate(t);
 	}
 }
 
@@ -208,8 +217,17 @@ void keyPress(unsigned char key, const PxTransform& camera)
 	{
 	//case 'B': break;
 	//case ' ':	break;
-	case ' ':
-	{
+	case '1': {
+		// Crear un nuevo proyectil estándar
+		Vector3D pos(camera.p.x-10.0f, camera.p.y, camera.p.z-10.0f);
+		//desde origten
+		//Vector3D pos(0, 0, 0);
+		Vector3D vel(camera.q.getBasisVector2().x * -10.0f,
+			camera.q.getBasisVector2().y * -10.0f,
+			camera.q.getBasisVector2().z * -10.0f);
+
+		projectiles.push_back(new Projectile(pos, vel, Vector3D(-10.0f, -9.8f, -10.0f), 1.0f));
+		
 		break;
 	}
 	default:

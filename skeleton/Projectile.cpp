@@ -6,7 +6,7 @@ Projectile::Projectile(Vector3D Pos, Vector3D Vel, Vector3D Acc, float Mass)
 
     // Inicializar la posición y la representación gráfica del proyectil
     pose = physx::PxTransform(Pos.x, Pos.y, Pos.z);
-    renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(0.2)), &pose, { 0.8, 0.8, 0.8, 1 });
+    renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(0.9)), &pose, { 0.8, 0.8, 0.8, 1 });
     RegisterRenderItem(renderItem);
 }
 
