@@ -8,6 +8,7 @@
 #include "RenderUtils.hpp"
 #include "callbacks.hpp"
 #include "Particle.h"
+#include "Projectile.h"
 
 #include <iostream>
 
@@ -30,9 +31,10 @@ PxPvd*                  gPvd        = NULL;
 
 PxDefaultCpuDispatcher*	gDispatcher = NULL;
 PxScene*				gScene      = NULL;
-Particle* p = NULL; //nueva particula
-Particle* p1 = NULL; //nueva particula Euler Semi
-Particle* p2= NULL; //nueva particula Verlet
+Particle* p = nullptr; //nueva particula
+Particle* p1 = nullptr; //nueva particula Euler Semi
+Particle* p2= nullptr; //nueva particula Verlet
+Projectile* projectile = nullptr;
 
 ContactReportCallback gContactReportCallback;
 
@@ -129,7 +131,7 @@ void initPhysics(bool interactive)
 	RenderItem* whiteRenderItem = new RenderItem(sphereShape, whiteActor, PxVec4(1.0f, 1.0f, 1.0f, 1.0f));  // Color blanco
 	RegisterRenderItem(whiteRenderItem);
 
-	// particula (2)
+	 //particula (2)
 	//p = new Particle({ 0,0,0 }, { .5,0,0 });
 
 	//particula (3)
@@ -137,9 +139,19 @@ void initPhysics(bool interactive)
 
 
 	//particulas Euler Semi-implicito y Verlet
-	Particle* p1 = new Particle({ 0,3,0 }, { 0.5,0,0 }, { 0,0.5,0 }, 0.99f,true);  // Esta partícula usa semi-implícito
-	Particle* p2 = new Particle({ 0,0,3 }, { 0.5,0,0 }, { 0,0.5,0 }, 0.99f,true);  // Esta partícula usa Verlet
+	//Particle* p1 = new Particle({ 0,3,0 }, { 0.5,0,0 }, { 0,0.5,0 }, 0.99f,true);  // Esta partícula usa semi-implícito
+	//Particle* p2 = new Particle({ 0,0,3 }, { 0.5,0,0 }, { 0,0.5,0 }, 0.99f,true);  // Esta partícula usa Verlet
 
+
+	//PROYECTIL PRACTICA 1.2
+	// 
+	//parametros iniciales
+	Vector3D initialPos(0.0f, 20.0f, 0.0f);
+	Vector3D initialVel(20.0f, 10.0f, 0.0f);  // Ajustar según el comportamiento deseado
+	Vector3D gravity(0.0f, -9.8f, 0.0f);      // Gravedad o cualquier aceleración que elijas
+	float mass = 1.0f;                        // Ajustar la masa según tu simulación
+
+	projectile = new Projectile(initialPos, initialVel, gravity, mass);
 
 
 	}
@@ -154,9 +166,13 @@ void stepPhysics(bool interactive, double t)
 
 	gScene->simulate(t);
 	gScene->fetchResults(true);
-	p->integrate(0.01); //Partícula para (2) y (3)
+	//p->integrate(0.01); //Partícula para (2) y (3)
 	//p1->integrateSemiImplicitEuler(0.01);  // Partícula Euler (4)
-	p2->integrateVerlet(0.016);  // Partícula Verlet
+	//p2->integrateVerlet(0.016);  // Partícula Verlet
+
+	if (projectile) {
+		projectile->integrate(t);
+	}
 }
 
 // Function to clean data
@@ -164,6 +180,12 @@ void stepPhysics(bool interactive, double t)
 void cleanupPhysics(bool interactive)
 {
 	PX_UNUSED(interactive);
+
+	//test de limpiar memoria
+	if (projectile) {
+		delete projectile;
+		projectile = nullptr;
+	}
 
 	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
 	gScene->release();
