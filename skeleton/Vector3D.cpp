@@ -95,6 +95,7 @@ Vector3D Vector3D::operator-(const Vector3D& vec) const {
 // Multiplicar el vector por un escalar
 Vector3D Vector3D::operator*(float scalar) const {
     return Vector3D(x * scalar, y * scalar, z * scalar);
+
 }
 
 // Sobrecarga del operador de asignación

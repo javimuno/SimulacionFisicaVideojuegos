@@ -3,6 +3,7 @@
 #include <PxPhysicsAPI.h>
 
 #include <vector>
+#include <iostream>
 
 #include "core.hpp"
 #include "RenderUtils.hpp"
@@ -147,9 +148,11 @@ void initPhysics(bool interactive)
 	//PROYECTIL PRACTICA 1.2
 	// 
 	//parametros iniciales
+
+	//
 	Vector3D initialPos(0.0f, 20.0f, 0.0f);
-	Vector3D initialVel(20.0f, 10.0f, 0.0f);  // Ajustar según el comportamiento deseado
-	Vector3D gravity(0.0f, -9.8f, 0.0f);      // Gravedad o cualquier aceleración que elijas
+	Vector3D initialVel(20.0f, 10.0f, 0.0f);  // vel inicial
+	Vector3D gravity(0.0f, -9.8f, 0.0f);      // gravedad
 	float mass = 1.0f;                        // Ajustar la masa según tu simulación
 
 	projectile = new Projectile(initialPos, initialVel, gravity, mass);
@@ -222,11 +225,18 @@ void keyPress(unsigned char key, const PxTransform& camera)
 		Vector3D pos(camera.p.x-10.0f, camera.p.y, camera.p.z-10.0f);
 		//desde origten
 		//Vector3D pos(0, 0, 0);
-		Vector3D vel(camera.q.getBasisVector2().x * -10.0f,
-			camera.q.getBasisVector2().y * -10.0f,
-			camera.q.getBasisVector2().z * -10.0f);
+		Vector3D vel(camera.q.getBasisVector2().x * -350.0f,
+			camera.q.getBasisVector2().y * -350.0f,
+			camera.q.getBasisVector2().z * -350.0f);
+		//Vector3D vel(-330.0, -35.0, -330.0);
 
-		projectiles.push_back(new Projectile(pos, vel, Vector3D(-10.0f, -9.8f, -10.0f), 1.0f));
+		
+		//vel pistola = 330 m/s
+		Vector3D sgrav = -9.8 * (vel.x/33,vel.y/33,vel.z/330);	
+
+		
+
+		projectiles.push_back(new Projectile(pos, vel,sgrav, 0.10f));
 		
 		break;
 	}

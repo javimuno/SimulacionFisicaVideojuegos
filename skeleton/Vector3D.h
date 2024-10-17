@@ -16,6 +16,7 @@ public:
     Vector3D operator-(const Vector3D& vec) const;  // Resta de vectores
     Vector3D operator*(float scalar) const;        // Multiplicación por un escalar
     Vector3D& operator=(const Vector3D& vec);      // Asignación
+    
 };
 
 
