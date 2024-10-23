@@ -7,7 +7,7 @@ Particle::Particle(Vector3D Pos, Vector3D Vel,Vector3D Acc, float Damping)
 	acc = Acc; //(3)
 	damping = Damping;
 	pose = physx::PxTransform(Pos.x, Pos.y, Pos.z);
-	renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(1.0)), &pose, { 0.5,0.4,0,1 });
+	renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(1.0)), &pose, { 0.1,0.9,0.9,1 });
 	RegisterRenderItem(renderItem);
 }
 
@@ -44,6 +44,8 @@ void Particle::integrate(double t)
 	vel.z *= pow(damping, t);
 	//posicion con velocidad actualizada
 	pose = physx::PxTransform(pose.p.x + vel.x * t, pose.p.y + vel.y * t, pose.p.z + vel.z * t);
+
+	age += t;
 
 }
 
@@ -86,4 +88,14 @@ void Particle::integrateVerlet(double t) {
 	pose = physx::PxTransform(pose.p.x, pose.p.y, pose.p.z);
 }
 
+void Particle::SetLifeTime(float time)
+{
+	lifetime = time;
+}
+
+
+// Método para verificar si la partícula ha "muerto" (es decir, si su edad supera su vida útil)
+bool Particle::IsDead() const {
+	return age >= lifetime;
+}
 

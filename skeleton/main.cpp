@@ -10,11 +10,12 @@
 #include "callbacks.hpp"
 #include "Particle.h"
 #include "Projectile.h"
+#include "Emitter.h"
 
 #include <iostream>
 
 
-std::string display_text = "This is a test";
+std::string display_text = "This is a testa";
 
 
 using namespace physx;
@@ -37,6 +38,11 @@ Particle* p1 = nullptr; //nueva particula Euler Semi
 Particle* p2= nullptr; //nueva particula Verlet
 Projectile* projectile = nullptr; //bala
 std::vector<Projectile*> projectiles; //array para las balas
+
+Emitter* emitter = nullptr;
+Emitter* hoseEmitter = nullptr;
+Emitter* fogEmitter = nullptr;
+Emitter* explosionEmitter = nullptr;
 
 ContactReportCallback gContactReportCallback;
 
@@ -157,10 +163,28 @@ void initPhysics(bool interactive)
 
 	projectile = new Projectile(initialPos, initialVel, gravity, mass);
 
+	//EMISORES
+
+	//emitter = new Emitter({ 10, 10, 0 }, { 1, 15, 0 }, 5.0f, 3.0f);  // Configuración del emisor
+	
 	
 
+	// Inicialización de los emisores
+	Vector3D baseVelocityHose(0.0f, 1000.0f, 0.0f);  // Velocidad para la manguera
+	Vector3D baseVelocityFog(0.0f, 1.0f, 0.0f);   // Velocidad para la niebla
+	Vector3D baseVelocityExplosion(0.0f, 2000.0f, 0.0f);  // Velocidad para la explosión
 
-	}
+	Vector3D velocityHose = hoseEmitter->generateGaussianDispersion(baseVelocityHose);
+	Vector3D velocityFog = hoseEmitter->generateGaussianDispersion(baseVelocityFog);
+	Vector3D velocityExplosion = hoseEmitter->generateGaussianDispersion(baseVelocityExplosion);
+
+
+	Vector3D velocityAux = hoseEmitter->generateRandomVelocity(10.0f, 1.0f);
+
+	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, { 110.0f, 0.0f, 0.0f }, 15.0f, 3.0f);
+	//fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 20.0f, 5.0f);
+	//explosionEmitter = new Emitter({ -10.0f, 0.0f, 0.0f }, velocityExplosion, 10.0f, 2.0f);
+}
 
 
 // Function to configure what happens in each step of physics
@@ -184,6 +208,22 @@ void stepPhysics(bool interactive, double t)
 	//para disparar proyectiles
 	for (auto& proj : projectiles) {
 		proj->integrate(t);
+	}
+
+	if (emitter) {
+		emitter->Update(t);
+	}
+
+	if (hoseEmitter) {
+		hoseEmitter->Update(t);
+	}
+	
+	if (fogEmitter) {
+		fogEmitter->Update(t);
+	}
+	
+	if (explosionEmitter) {
+		explosionEmitter->Update(t);
 	}
 }
 
