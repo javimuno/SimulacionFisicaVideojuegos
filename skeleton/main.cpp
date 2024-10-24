@@ -143,7 +143,7 @@ void initPhysics(bool interactive)
 	//p = new Particle({ 0,0,0 }, { .5,0,0 });
 
 	//particula (3)
-	p = new Particle({ 0,0,0 }, { 1,0,0 }, { 0,0.05,0.05 }, 0.99f);
+	p = new Particle({ 0,0,0 }, { 1,0,0 }, { 0,0.05,0.05 }, 0.99f,true);
 
 
 	//particulas Euler Semi-implicito y Verlet
@@ -170,20 +170,24 @@ void initPhysics(bool interactive)
 	
 
 	// Inicialización de los emisores
-	Vector3D baseVelocityHose(0.0f, 1000.0f, 0.0f);  // Velocidad para la manguera
-	Vector3D baseVelocityFog(0.0f, 1.0f, 0.0f);   // Velocidad para la niebla
-	Vector3D baseVelocityExplosion(0.0f, 2000.0f, 0.0f);  // Velocidad para la explosión
+	//Vector3D baseVelocityHose(0.0f, 1000.0f, 0.0f);  // Velocidad para la manguera
+	//Vector3D baseVelocityFog(0.0f, 1.0f, 0.0f);   // Velocidad para la niebla
+	//Vector3D baseVelocityExplosion(0.0f, 2000.0f, 0.0f);  // Velocidad para la explosión
 
-	Vector3D velocityHose = hoseEmitter->generateGaussianDispersion(baseVelocityHose);
-	Vector3D velocityFog = hoseEmitter->generateGaussianDispersion(baseVelocityFog);
-	Vector3D velocityExplosion = hoseEmitter->generateGaussianDispersion(baseVelocityExplosion);
+	//Vector3D velocityHose = hoseEmitter->generateGaussianDispersion(baseVelocityHose);
+	//Vector3D velocityFog = hoseEmitter->generateGaussianDispersion(baseVelocityFog);
+	//Vector3D velocityExplosion = hoseEmitter->generateGaussianDispersion(baseVelocityExplosion);
 
 
-	Vector3D velocityAux = hoseEmitter->generateRandomVelocity(20.0f, 1.0f);
+	Vector3D velocityAux = hoseEmitter->generateRandomVelocity(30.0f, 1.0f);
+	Vector3D velocityFog = fogEmitter->generateRandomVelocity(0.5f, 0.2f);
+	Vector3D velocityExplosion = explosionEmitter->generateRandomVelocity(300.0f, 250.0f);
 
-	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f);
-	//fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 20.0f, 5.0f);
-	//explosionEmitter = new Emitter({ -10.0f, 0.0f, 0.0f }, velocityExplosion, 10.0f, 2.0f);
+	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f,1);
+
+	fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f,2);
+
+	explosionEmitter = new Emitter({ -10.0f, 0.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f,3);
 }
 
 
@@ -219,11 +223,11 @@ void stepPhysics(bool interactive, double t)
 	}
 	
 	if (fogEmitter) {
-		fogEmitter->Update(t);
+		fogEmitter->Update(t*0.3f); //para que sea más lento pero no cambie el update
 	}
 	
 	if (explosionEmitter) {
-		explosionEmitter->Update(t);
+		explosionEmitter->Update(t*5.0f);
 	}
 }
 

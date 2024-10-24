@@ -13,9 +13,10 @@ public:
     float lifeTime;   // Duración de vida de las partículas
     std::vector<Particle*> particles;  // Contenedor de partículas
     float timeSinceLastSpawn;
+    float typeEmitter;
 
     // Constructor
-    Emitter(Vector3D pos, Vector3D vel, float rate, float life);
+    Emitter(Vector3D pos, Vector3D vel, float rate, float life,float type);
 
     //destructor
     ~Emitter() {
@@ -36,8 +37,12 @@ public:
     static std::normal_distribution<float> distribution;
 
     Vector3D generateGaussianDispersion(const Vector3D& baseVelocity);
+    Vector3D generateGaussianDispersionFog(const Vector3D& baseVelocity);
+    Vector3D generateGaussianDispersionExplosion(const Vector3D& baseVelocity);
     // Declaración del método para generar velocidades aleatorias
     Vector3D generateRandomVelocity(float mean, float stddev);
+    Vector3D generateRandomVelocityFog(float mean, float stddev);
+    Vector3D generateRandomVelocityExplosion(float mean, float stddev);
 
 private:
 

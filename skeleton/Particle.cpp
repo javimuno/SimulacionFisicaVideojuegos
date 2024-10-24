@@ -7,8 +7,9 @@ Particle::Particle(Vector3D Pos, Vector3D Vel,Vector3D Acc, float Damping)
 	acc = Acc; //(3)
 	damping = Damping;
 	age = Damping;
+	//size = Size;
 	pose = physx::PxTransform(Pos.x, Pos.y, Pos.z);
-	renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(0.5)), &pose, { 0.1,0.9,0.9,1 });
+	renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(2.0)), &pose, { 0.1,0.9,0.9,1 });
 	RegisterRenderItem(renderItem);
 }
 

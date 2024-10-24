@@ -20,10 +20,11 @@ public:
 	RenderItem* renderItem;
 	float lifetime;
 	float age;
+	float size;
 
 
 
-	Particle(Vector3D Pos, Vector3D Vel,Vector3D Acc,float Damping);
+	Particle(Vector3D Pos, Vector3D Vel, Vector3D Acc, float Damping);
 	Particle(Vector3D Pos, Vector3D Vel,Vector3D Acc,float Damping,bool Op); //para euler y verlet
 	~Particle();
 
