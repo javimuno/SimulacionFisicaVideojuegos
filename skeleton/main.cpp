@@ -187,7 +187,7 @@ void initPhysics(bool interactive)
 
 	fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f,2);
 
-	explosionEmitter = new Emitter({ -10.0f, 0.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f,3);
+	explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f,3);
 }
 
 
@@ -227,7 +227,7 @@ void stepPhysics(bool interactive, double t)
 	}
 	
 	if (explosionEmitter) {
-		explosionEmitter->Update(t*5.0f);
+		explosionEmitter->Update(t);
 	}
 }
 

@@ -12,6 +12,8 @@ public:
     float spawnRate;  // Número de partículas generadas por segundo
     float lifeTime;   // Duración de vida de las partículas
     std::vector<Particle*> particles;  // Contenedor de partículas
+    std::vector<Particle*> particlesAux;  // Contenedor de partículas AUX FAIL
+    
     float timeSinceLastSpawn;
     float typeEmitter;
 
@@ -29,6 +31,10 @@ public:
 
     // Método para emitir una nueva partícula
     void EmitParticle();
+
+    //Para aux
+
+    void EmitAuxParticle();
 
     // Método para actualizar las partículas
     void Update(float deltaTime);

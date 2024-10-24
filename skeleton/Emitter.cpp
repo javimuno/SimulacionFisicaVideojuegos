@@ -13,7 +13,7 @@ Emitter::Emitter(Vector3D pos, Vector3D vel, float rate, float life,float type)
 // Método para emitir una nueva partícula
 void Emitter::EmitParticle() {
 
-    Particle* newpParticle = nullptr;
+    //Particle* newpParticle = nullptr;
     if (typeEmitter == 1) {
         Particle* newParticle = new Particle(position, velocity, generateGaussianDispersion(0.1f), 0.99f);
         newParticle->SetLifeTime(lifeTime);
@@ -27,13 +27,19 @@ void Emitter::EmitParticle() {
     }
     else if (typeEmitter==3)
     {
-        Particle* newParticle = new Particle(position, generateRandomVelocityExplosion(10.0f,1.0f), generateGaussianDispersionExplosion(1.0f), 0.99f);
+        Particle* newParticle = new Particle(position, generateRandomVelocityExplosion(2.0f,1.0f), generateGaussianDispersionExplosion(5.0f), 0.99f);
         newParticle->SetLifeTime(lifeTime);
         particles.push_back(newParticle);
     }
     
 
     //generateRandomVelocity(10.0f,1.0f)
+}
+
+void Emitter::EmitAuxParticle() {
+    Particle* newParticle = new Particle(position, generateRandomVelocityExplosion(10.0f, 1.0f), generateGaussianDispersionExplosion(1.0f), 0.99f);
+    newParticle->SetLifeTime(lifeTime);
+    particlesAux.push_back(newParticle);
 }
 
 // Método para actualizar las partículas
@@ -45,6 +51,25 @@ void Emitter::Update(float deltaTime) {
         timeSinceLastSpawn = 0.0f;
     }
 
+    // Actualizar todas las partículas A POSTERIORI DE MUERTE  activas FAIL
+    for (auto it = particlesAux.begin(); it != particlesAux.end(); ) {
+        (*it)->integrate(deltaTime);
+
+
+
+
+        // Verificar si la partícula ha excedido su tiempo de vida
+        if ((*it)->IsDead()) {
+            
+            delete (*it);  // Liberar memoria de la partícula
+            it = particlesAux.erase(it);  // Eliminarla de la lista
+        }
+        else {
+
+            ++it;
+        }
+    }
+
     // Actualizar todas las partículas activas
     for (auto it = particles.begin(); it != particles.end(); ) {
         (*it)->integrate(deltaTime);
@@ -54,10 +79,14 @@ void Emitter::Update(float deltaTime) {
 
         // Verificar si la partícula ha excedido su tiempo de vida
         if ((*it)->IsDead()) {
+            //EmitAuxParticle(); //idea para los fuegos FAIL
             delete (*it);  // Liberar memoria de la partícula
             it = particles.erase(it);  // Eliminarla de la lista
+
+        
         }
         else {
+           
             ++it;
         }
     }
