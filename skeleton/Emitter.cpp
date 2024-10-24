@@ -12,7 +12,7 @@ Emitter::Emitter(Vector3D pos, Vector3D vel, float rate, float life)
 
 // Método para emitir una nueva partícula
 void Emitter::EmitParticle() {
-    Particle* newParticle = new Particle(position, generateRandomVelocity(10.0f, 1.0f), generateGaussianDispersion(0.1f), 0.99f);
+    Particle* newParticle = new Particle(position, generateRandomVelocity(20.0f, 1.0f), generateGaussianDispersion(0.1f), 0.99f);
     newParticle->SetLifeTime(lifeTime);
     particles.push_back(newParticle);
 
@@ -31,6 +31,7 @@ void Emitter::Update(float deltaTime) {
     // Actualizar todas las partículas activas
     for (auto it = particles.begin(); it != particles.end(); ) {
         (*it)->integrate(deltaTime);
+        
 
         // Verificar si la partícula ha excedido su tiempo de vida
         if ((*it)->IsDead()) {
@@ -43,14 +44,17 @@ void Emitter::Update(float deltaTime) {
     }
 }
 
+
+//generador Gaussiano
 Vector3D Emitter::generateGaussianDispersion(const Vector3D& baseVelocity) {
     Vector3D dispersion(
-        baseVelocity.x + distribution(generator) * 0.1f,
-        baseVelocity.y + distribution(generator) * 5.0f,
-        baseVelocity.z + distribution(generator) * 0.1f
+        baseVelocity.x + distribution(generator) * 0.5f,
+        baseVelocity.y + distribution(generator) * 0.05f,
+        baseVelocity.z + distribution(generator) * 0.5f
     );
     return dispersion;
 }
+
 
 // Método para generar una velocidad aleatoria con distribución Gaussiana
 Vector3D Emitter::generateRandomVelocity(float mean, float stddev) {
@@ -58,9 +62,9 @@ Vector3D Emitter::generateRandomVelocity(float mean, float stddev) {
     std::mt19937 gen(rd());
     std::normal_distribution<> d(mean, stddev);
 
-    float vx = 0.0f;
+    float vx = -d(gen);
     float vy = d(gen);
-    float vz = 0.0f;
+    float vz = -d(gen);
 
     return Vector3D(vx, vy, vz);
 }

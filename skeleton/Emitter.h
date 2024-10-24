@@ -17,6 +17,15 @@ public:
     // Constructor
     Emitter(Vector3D pos, Vector3D vel, float rate, float life);
 
+    //destructor
+    ~Emitter() {
+        for (Particle* p : particles) {
+            delete p;
+        }
+        particles.clear();
+    }
+
+
     // Método para emitir una nueva partícula
     void EmitParticle();
 

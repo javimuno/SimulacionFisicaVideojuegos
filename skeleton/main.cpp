@@ -15,7 +15,7 @@
 #include <iostream>
 
 
-std::string display_text = "This is a testa";
+std::string display_text = "This is a testant";
 
 
 using namespace physx;
@@ -179,9 +179,9 @@ void initPhysics(bool interactive)
 	Vector3D velocityExplosion = hoseEmitter->generateGaussianDispersion(baseVelocityExplosion);
 
 
-	Vector3D velocityAux = hoseEmitter->generateRandomVelocity(10.0f, 1.0f);
+	Vector3D velocityAux = hoseEmitter->generateRandomVelocity(20.0f, 1.0f);
 
-	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, { 110.0f, 0.0f, 0.0f }, 15.0f, 3.0f);
+	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f);
 	//fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 20.0f, 5.0f);
 	//explosionEmitter = new Emitter({ -10.0f, 0.0f, 0.0f }, velocityExplosion, 10.0f, 2.0f);
 }
