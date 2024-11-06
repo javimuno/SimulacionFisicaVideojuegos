@@ -106,26 +106,3 @@ Vector3D& Vector3D::operator=(const Vector3D& vec) {
     z = vec.z;
     return *this;
 }
-
-//p3
-
-// Implementación de += para sumar otro vector
-Vector3D& Vector3D::operator+=(const Vector3D& vec) {
-    x += vec.x;
-    y += vec.y;
-    z += vec.z;
-    return *this;
-}
-
-// Implementación de *= para multiplicar por un escalar
-Vector3D& Vector3D::operator*=(float scalar) {
-    x *= scalar;
-    y *= scalar;
-    z *= scalar;
-    return *this;
-}
-
-// Implementación del operador amigo * para escalar * vector
-Vector3D operator*(float scalar, const Vector3D& vec) {
-    return Vector3D(vec.x * scalar, vec.y * scalar, vec.z * scalar);
-}

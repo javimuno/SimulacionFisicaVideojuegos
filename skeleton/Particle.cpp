@@ -39,7 +39,7 @@ void Particle::integrate(double t)
 	//velocidad con aceleracion
 	vel.x += acc.x * t;
 	vel.y += acc.y * t;
-	vel.y -=0.1f;            //truco para gravedad CHUSTERO p2
+	//vel.y -=0.1f;            //truco para gravedad CHUSTERO
 	vel.z += acc.z * t;
 	//damping a la velocidad
 	vel.x *= pow(damping, t);
@@ -102,28 +102,3 @@ bool Particle::IsDead() const {
 	return age >= lifetime;
 }
 
-//P3
-void Particle::integrateG(double t) {
-	// Calcula la aceleración aplicando las fuerzas acumuladas
-	if (mass > 0.0f) {
-		acceleration = accumulatedForce * (1.0f / mass);
-	}
-
-	// Actualiza la velocidad con la aceleración y el damping
-	velocity += acceleration * t;
-	velocity *= pow(damping, t);
-
-	// Actualiza la posición con la velocidad
-	position += velocity * t;
-
-	// Resetea la fuerza acumulada
-	accumulatedForce = Vector3D(0.0f, 0.0f, 0.0f);
-}
-
-void Particle::addForce(const Vector3D& force) {
-	accumulatedForce += force; // Acumula la nueva fuerza
-}
-
-float Particle::getMass() const {
-	return mass;
-}
