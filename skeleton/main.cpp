@@ -10,8 +10,6 @@
 #include "callbacks.hpp"
 #include "Particle.h"
 #include "Projectile.h"
-#include "GravityForceGenerator.h"
-#include "ForceRegistry.h"
 #include "Emitter.h"
 
 #include <iostream>
@@ -25,19 +23,19 @@ using namespace physx;
 PxDefaultAllocator		gAllocator;
 PxDefaultErrorCallback	gErrorCallback;
 
-PxFoundation*			gFoundation = NULL;
-PxPhysics*				gPhysics	= NULL;
+PxFoundation* gFoundation = NULL;
+PxPhysics* gPhysics = NULL;
 
 
-PxMaterial*				gMaterial	= NULL;
+PxMaterial* gMaterial = NULL;
 
-PxPvd*                  gPvd        = NULL;
+PxPvd* gPvd = NULL;
 
-PxDefaultCpuDispatcher*	gDispatcher = NULL;
-PxScene*				gScene      = NULL;
+PxDefaultCpuDispatcher* gDispatcher = NULL;
+PxScene* gScene = NULL;
 Particle* p = nullptr; //nueva particula
 Particle* p1 = nullptr; //nueva particula Euler Semi
-Particle* p2= nullptr; //nueva particula Verlet
+Particle* p2 = nullptr; //nueva particula Verlet
 Projectile* projectile = nullptr; //bala
 std::vector<Projectile*> projectiles; //array para las balas
 
@@ -60,9 +58,9 @@ void initPhysics(bool interactive)
 
 	gPvd = PxCreatePvd(*gFoundation);
 	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
-	gPvd->connect(*transport,PxPvdInstrumentationFlag::eALL);
+	gPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
 
-	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(),true,gPvd);
+	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(), true, gPvd);
 
 	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
@@ -75,7 +73,7 @@ void initPhysics(bool interactive)
 	sceneDesc.simulationEventCallback = &gContactReportCallback;
 	gScene = gPhysics->createScene(sceneDesc);
 
-	
+
 
 	//// Crear la geometría de la esfera
 	//PxSphereGeometry sphereGeometry(1.0f);  // Esfera con un radio de 1.0
@@ -141,11 +139,11 @@ void initPhysics(bool interactive)
 	RenderItem* whiteRenderItem = new RenderItem(sphereShape, whiteActor, PxVec4(1.0f, 1.0f, 1.0f, 1.0f));  // Color blanco
 	RegisterRenderItem(whiteRenderItem);
 
-	 //particula (2)
-	//p = new Particle({ 0,0,0 }, { .5,0,0 });
+	//particula (2)
+   //p = new Particle({ 0,0,0 }, { .5,0,0 });
 
-	//particula (3)
-	p = new Particle({ 0,0,0 }, { 1,0,0 }, { 0,0.05,0.05 }, 0.99f,true);
+   //particula (3)
+	p = new Particle({ 0,0,0 }, { 1,0,0 }, { 0,0.05,0.05 }, 0.99f, true);
 
 
 	//particulas Euler Semi-implicito y Verlet
@@ -168,8 +166,8 @@ void initPhysics(bool interactive)
 	//EMISORES
 
 	//emitter = new Emitter({ 10, 10, 0 }, { 1, 15, 0 }, 5.0f, 3.0f);  // Configuración del emisor
-	
-	
+
+
 
 	// Inicialización de los emisores
 	//Vector3D baseVelocityHose(0.0f, 1000.0f, 0.0f);  // Velocidad para la manguera
@@ -185,64 +183,12 @@ void initPhysics(bool interactive)
 	Vector3D velocityFog = fogEmitter->generateRandomVelocity(0.5f, 0.2f);
 	Vector3D velocityExplosion = explosionEmitter->generateRandomVelocity(300.0f, 250.0f);
 
-	//hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f,1);
+	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f, 1);
 
-	//fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f,2);
+	fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f, 2);
 
-	//explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f,3);
-
-	//p3
-
-	// Crea las partículas con masas diferentes
-	Particle* p1 = new Particle(Vector3D(0, 10, 0), Vector3D(0, 0, 0), Vector3D(0, 0, 0), 0.99f, 1.0f);
-	Particle* p2 = new Particle(Vector3D(0, 10, 0), Vector3D(0, 0, 0), Vector3D(0, 0, 0), 0.99f, 2.0f);
-
-	// Define un generador de fuerza de gravedad y otro para flotabilidad (ajustado para ilustrar el efecto)
-	GravityForceGenerator gravityp3(Vector3D(0, -9.81f, 0));
-	GravityForceGenerator buoyancy(Vector3D(0, 5.0f, 0));
-
-	// Crea el registro de fuerzas y añade las fuerzas a las partículas
-	ForceRegistry registry;
-	registry.add(p1, &gravityp3);
-	registry.add(p2, &buoyancy);
-
-	// Simulación en bucle
-	float deltaTime = 0.016f; // 16 ms
-	for (int i = 0; i < 100; i++) {
-		registry.updateForces(deltaTime);
-		p1->integrate(deltaTime);
-		p2->integrate(deltaTime);
-
-		// Mostrar las posiciones actuales
-		//std::cout << "Posición p1: " << p1->getPosition().toString() << std::endl;
-		//std::cout << "Posición p2: " << p2->getPosition().toString() << std::endl;
-	}
-
-	delete p1;
-	delete p2;
-
-	
-
-
-
-
-
-
-
-
-
+	explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f, 3);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Function to configure what happens in each step of physics
@@ -275,11 +221,11 @@ void stepPhysics(bool interactive, double t)
 	if (hoseEmitter) {
 		hoseEmitter->Update(t);
 	}
-	
+
 	if (fogEmitter) {
-		fogEmitter->Update(t*0.3f); //para que sea más lento pero no cambie el update
+		fogEmitter->Update(t * 0.3f); //para que sea más lento pero no cambie el update
 	}
-	
+
 	if (explosionEmitter) {
 		explosionEmitter->Update(t);
 	}
@@ -301,26 +247,26 @@ void cleanupPhysics(bool interactive)
 	gScene->release();
 	gDispatcher->release();
 	// -----------------------------------------------------
-	gPhysics->release();	
+	gPhysics->release();
 	PxPvdTransport* transport = gPvd->getTransport();
 	gPvd->release();
 	transport->release();
-	
+
 	gFoundation->release();
-	}
+}
 
 // Function called when a key is pressed
 void keyPress(unsigned char key, const PxTransform& camera)
 {
 	PX_UNUSED(camera);
 
-	switch(toupper(key))
+	switch (toupper(key))
 	{
-	//case 'B': break;
-	//case ' ':	break;
+		//case 'B': break;
+		//case ' ':	break;
 	case '1': {
 		// Crear un nuevo proyectil estándar
-		Vector3D pos(camera.p.x-10.0f, camera.p.y, camera.p.z-10.0f);
+		Vector3D pos(camera.p.x - 10.0f, camera.p.y, camera.p.z - 10.0f);
 		//desde origten
 		//Vector3D pos(0, 0, 0);
 		Vector3D vel(camera.q.getBasisVector2().x * -350.0f,
@@ -328,14 +274,14 @@ void keyPress(unsigned char key, const PxTransform& camera)
 			camera.q.getBasisVector2().z * -350.0f);
 		//Vector3D vel(-330.0, -35.0, -330.0);
 
-		
+
 		//vel pistola = 330 m/s
-		Vector3D sgrav = -9.8 * (vel.x/33,vel.y/33,vel.z/330);	
+		Vector3D sgrav = -9.8 * (vel.x / 33, vel.y / 33, vel.z / 330);
 
-		
 
-		projectiles.push_back(new Projectile(pos, vel,sgrav, 0.10f));
-		
+
+		projectiles.push_back(new Projectile(pos, vel, sgrav, 0.10f));
+
 		break;
 	}
 	default:
@@ -350,7 +296,7 @@ void onCollision(physx::PxActor* actor1, physx::PxActor* actor2)
 }
 
 
-int main(int, const char*const*)
+int main(int, const char* const*)
 {
 #ifndef OFFLINE_EXECUTION 
 	extern void renderLoop();
@@ -358,7 +304,7 @@ int main(int, const char*const*)
 #else
 	static const PxU32 frameCount = 100;
 	initPhysics(false);
-	for(PxU32 i=0; i<frameCount; i++)
+	for (PxU32 i = 0; i < frameCount; i++)
 		stepPhysics(false);
 	cleanupPhysics(false);
 #endif
