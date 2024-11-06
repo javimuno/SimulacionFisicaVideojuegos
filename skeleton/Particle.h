@@ -34,8 +34,21 @@ public:
 	void SetLifeTime(float time);
 	bool IsDead() const;
 
+
+	//P3
+
+	void addForce(const Vector3D& force); // Añade una fuerza a la partícula
+	float getMass() const; // Devuelve la masa de la partícula
+	void integrateG(double t); //integrate de P3
+
 private:
 
+	//P3
+	Vector3D position;
+	Vector3D velocity;
+	Vector3D acceleration;
+	Vector3D accumulatedForce; // Acumula fuerzas externas
+	float mass; // Nueva propiedad para la masa
 
 
 };

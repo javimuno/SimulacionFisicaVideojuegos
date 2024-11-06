@@ -10,6 +10,8 @@
 #include "callbacks.hpp"
 #include "Particle.h"
 #include "Projectile.h"
+#include "GravityForceGenerator.h"
+#include "ForceRegistry.h"
 #include "Emitter.h"
 
 #include <iostream>
@@ -183,12 +185,64 @@ void initPhysics(bool interactive)
 	Vector3D velocityFog = fogEmitter->generateRandomVelocity(0.5f, 0.2f);
 	Vector3D velocityExplosion = explosionEmitter->generateRandomVelocity(300.0f, 250.0f);
 
-	hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f,1);
+	//hoseEmitter = new Emitter({ 0.0f, 0.0f, 0.0f }, velocityAux, 50.0f, 7.0f,1);
 
-	fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f,2);
+	//fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f,2);
 
-	explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f,3);
+	//explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f,3);
+
+	//p3
+
+	// Crea las partículas con masas diferentes
+	Particle* p1 = new Particle(Vector3D(0, 10, 0), Vector3D(0, 0, 0), Vector3D(0, 0, 0), 0.99f, 1.0f);
+	Particle* p2 = new Particle(Vector3D(0, 10, 0), Vector3D(0, 0, 0), Vector3D(0, 0, 0), 0.99f, 2.0f);
+
+	// Define un generador de fuerza de gravedad y otro para flotabilidad (ajustado para ilustrar el efecto)
+	GravityForceGenerator gravityp3(Vector3D(0, -9.81f, 0));
+	GravityForceGenerator buoyancy(Vector3D(0, 5.0f, 0));
+
+	// Crea el registro de fuerzas y añade las fuerzas a las partículas
+	ForceRegistry registry;
+	registry.add(p1, &gravityp3);
+	registry.add(p2, &buoyancy);
+
+	// Simulación en bucle
+	float deltaTime = 0.016f; // 16 ms
+	for (int i = 0; i < 100; i++) {
+		registry.updateForces(deltaTime);
+		p1->integrate(deltaTime);
+		p2->integrate(deltaTime);
+
+		// Mostrar las posiciones actuales
+		//std::cout << "Posición p1: " << p1->getPosition().toString() << std::endl;
+		//std::cout << "Posición p2: " << p2->getPosition().toString() << std::endl;
+	}
+
+	delete p1;
+	delete p2;
+
+	
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Function to configure what happens in each step of physics
