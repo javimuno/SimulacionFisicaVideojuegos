@@ -179,7 +179,9 @@ void initPhysics(bool interactive)
 	//Vector3D velocityExplosion = hoseEmitter->generateGaussianDispersion(baseVelocityExplosion);
 
 
-	Vector3D velocityAux = hoseEmitter->generateRandomVelocity(30.0f, 1.0f);
+	//P2
+
+	/*Vector3D velocityAux = hoseEmitter->generateRandomVelocity(30.0f, 1.0f);
 	Vector3D velocityFog = fogEmitter->generateRandomVelocity(0.5f, 0.2f);
 	Vector3D velocityExplosion = explosionEmitter->generateRandomVelocity(300.0f, 250.0f);
 
@@ -188,7 +190,7 @@ void initPhysics(bool interactive)
 
 	fogEmitter = new Emitter({ 10.0f, 10.0f, 0.0f }, velocityFog, 50.0f, 5.0f, 2);
 
-	explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f, 3);
+	explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f, 3);*/
 
 
 }
