@@ -26,6 +26,9 @@ public:
 
 	Particle(Vector3D Pos, Vector3D Vel, Vector3D Acc, float Damping);
 	Particle(Vector3D Pos, Vector3D Vel,Vector3D Acc,float Damping,bool Op); //para euler y verlet
+	Particle(const Vector3D& position, const Vector3D& velocity, float mass);
+
+
 	~Particle();
 
 	void integrate(double t); //mueve en función del tiempo en la dirección de pose
@@ -34,8 +37,18 @@ public:
 	void SetLifeTime(float time);
 	bool IsDead() const;
 
-private:
+	//p3
+	void integrateG(float deltaTime);
+	void addForce(const Vector3D& force);
 
+	float getMass() const { return mass; }
+	bool isAlive() const { return age < lifetime; }
+
+private:
+	Vector3D position;
+	Vector3D velocity;
+	Vector3D accumulatedForce;  // Fuerza acumulada
+	float mass;
 
 
 };

@@ -153,7 +153,7 @@ void initPhysics(bool interactive)
 
 	//PROYECTIL PRACTICA 1.2
 	// 
-	//parametros iniciales
+	//parametros iniciales,
 
 	//
 	Vector3D initialPos(0.0f, 20.0f, 0.0f);

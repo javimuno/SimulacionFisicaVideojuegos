@@ -102,3 +102,27 @@ bool Particle::IsDead() const {
 	return age >= lifetime;
 }
 
+
+//p3
+
+Particle::Particle(const Vector3D& position, const Vector3D& velocity, float mass)
+	: position(position), velocity(velocity), mass(mass), accumulatedForce(0, 0, 0), lifetime(5.0f), age(0.0f) {}
+
+void Particle::integrateG(float deltaTime) {
+	if (mass <= 0) return;  // No se aplica física a partículas sin masa
+
+	// Calculamos la aceleración usando la fuerza acumulada
+	Vector3D acceleration = accumulatedForce * (1.0f / mass);
+	velocity += acceleration * deltaTime;
+	position += velocity * deltaTime;
+
+	age += deltaTime;
+
+	// Reiniciamos la fuerza acumulada después de la integración
+	accumulatedForce = Vector3D(0, 0, 0);
+}
+
+void Particle::addForce(const Vector3D& force) {
+	accumulatedForce += force;
+}
+
