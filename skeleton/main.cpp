@@ -11,6 +11,9 @@
 #include "Particle.h"
 #include "Projectile.h"
 #include "Emitter.h"
+#include "GravityForceGenerator.h"
+#include "Vector3D.h"
+
 
 #include <iostream>
 
@@ -33,16 +36,27 @@ PxPvd* gPvd = NULL;
 
 PxDefaultCpuDispatcher* gDispatcher = NULL;
 PxScene* gScene = NULL;
+
+//p1
 Particle* p = nullptr; //nueva particula
 Particle* p1 = nullptr; //nueva particula Euler Semi
 Particle* p2 = nullptr; //nueva particula Verlet
 Projectile* projectile = nullptr; //bala
 std::vector<Projectile*> projectiles; //array para las balas
 
+
+//p2
 Emitter* emitter = nullptr;
 Emitter* hoseEmitter = nullptr;
 Emitter* fogEmitter = nullptr;
 Emitter* explosionEmitter = nullptr;
+
+//p3
+Particle* particle1;
+Particle* particle2;
+GravityForceGenerator* gravityGen1;
+GravityForceGenerator* gravityGen2;
+
 
 ContactReportCallback gContactReportCallback;
 
@@ -193,6 +207,22 @@ void initPhysics(bool interactive)
 	explosionEmitter = new Emitter({ -20.0f, 10.0f, 0.0f }, velocityExplosion, 50.0f, 2.5f, 3);*/
 
 
+	//p3
+
+	// Creamos partículas con diferentes masas
+	particle1 = new Particle(Vector3D(0.0f, 10.0f, 0.0f), Vector3D(0.0f, 0.0f, 0.0f), 1.0f); // Masa 1.0
+	particle2 = new Particle(Vector3D(-20.0f, 10.0f, 0.0f), Vector3D(0.0f, 0.0f, 0.0f), 2.0f); // Masa 2.0
+
+	// Creamos dos generadores de gravedad con diferentes intensidades
+	gravityGen1 = new GravityForceGenerator(Vector3D(0.0f, -9.81f, 0.0f)); // Fuerza de gravedad normal
+	gravityGen2 = new GravityForceGenerator(Vector3D(0.0f, -4.905f, 0.0f)); // Gravedad reducida
+
+
+
+	
+
+
+
 }
 
 
@@ -234,6 +264,21 @@ void stepPhysics(bool interactive, double t)
 	if (explosionEmitter) {
 		explosionEmitter->Update(t);
 	}
+
+	//p3
+
+	// Aplicamos las fuerzas de gravedad a cada partícula
+	gravityGen1->updateForce(particle1, t);
+	gravityGen2->updateForce(particle2, t);
+
+	// Actualizamos las partículas si están activas
+	if (particle1->isAlive()) {
+		particle1->integrate(t);
+	}
+	if (particle2->isAlive()) {
+		particle2->integrate(t);
+	}
+
 }
 
 // Function to clean data
