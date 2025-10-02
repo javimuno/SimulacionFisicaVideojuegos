@@ -11,6 +11,10 @@
 #include <iostream>
 #include "Vector3D.h"
 #include "Particle.h"
+#include <string>
+
+
+//=========== GLOBALES =========
 
 std::string display_text = "This is a test";
 
@@ -45,6 +49,11 @@ RenderItem* gAxisZ = nullptr;
 // P1: lista de partículas controladas con teclado
 std::vector<Particle*> gParticles;
 
+// escala de tiempo ---->> de momento esto no 
+float gTimeScale = 1.0f; //multiplicador de dt en la integración
+
+
+//======================= FIN GLOBALES=================
 
 //==============TESTEO PARA SPAWNEAR
 static Vector3D nextSpawnPos()
@@ -172,9 +181,11 @@ void stepPhysics(bool interactive, double t)
 	//if (p) p->integrate(static_cast<float>(t)); // usa el dt real, no 0.3
 
 	//=====CON SPAWNER
+	// alterador de tiempo --->> De momento no funciona o no se me ocurre
+	float dt = static_cast<float>(t) * gTimeScale;
 	// Integra TODAS con dt real
 	for (auto* it : gParticles)
-		it->integrate(static_cast<float>(t));
+		it->integrate(dt);
 }
 
 // Function to clean data
@@ -221,36 +232,48 @@ void keyPress(unsigned char key, const PxTransform& camera)
 	case '1': // Euler explícito, SIN damping
 	{
 		spawnParticle(IntegratorType::EulerExplicit, 1.0f,
-			Vector3D(0.5f, 0.5f, 0.0f),
-			Vector3D(0.0f, -0.2f, 0.0f));
+			Vector3D(2.5f, 6.5f, 0.0f),
+			Vector3D(0.0f, -9.8f, 0.0f));
 		display_text = "Spawn: Euler EXP, damping=1.0 (sin damping)";
 		break;
 	}
 	case '2': // Euler explícito, CON damping
 	{
-		spawnParticle(IntegratorType::EulerExplicit, 0.99f,
-			Vector3D(0.5f, 0.5f, 0.0f),
-			Vector3D(0.0f, -0.2f, 0.0f));
+		spawnParticle(IntegratorType::EulerExplicit, 0.90f,
+			Vector3D(2.5f, 60.5f, 0.0f),
+			Vector3D(0.0f, -9.8f, 0.0f));
 		display_text = "Spawn: Euler EXP, damping=0.99";
 		break;
 	}
 	case '3': // Euler semi-implícito, SIN damping
 	{
 		spawnParticle(IntegratorType::EulerSemiImplicit, 1.0f,
-			Vector3D(0.5f, 0.5f, 0.0f),
-			Vector3D(0.0f, -0.2f, 0.0f));
+			Vector3D(2.5f, 6.5f, 0.0f),
+			Vector3D(0.0f, -9.8f, 0.0f));
 		display_text = "Spawn: Euler SEMI, damping=1.0 (sin damping)";
 		break;
 	}
 	case '4': // Euler semi-implícito, CON damping
 	{
-		spawnParticle(IntegratorType::EulerSemiImplicit, 0.99f,
-			Vector3D(0.5f, 0.5f, 0.0f),
-			Vector3D(0.0f, -0.2f, 0.0f));
+		spawnParticle(IntegratorType::EulerSemiImplicit, 0.90f,
+			Vector3D(2.5f, 60.5f, 0.0f),
+			Vector3D(0.0f, -9.8f, 0.0f));
 		display_text = "Spawn: Euler SEMI, damping=0.99";
 		break;
 	}
-	case 'C': // Clear: borra todas las partículas
+	case '+': {
+		gTimeScale *= 1.5f;            // sube 50%
+		if (gTimeScale > 10.0f) gTimeScale = 10.0f;  // cap
+		display_text = "TimeScale x" + std::to_string(gTimeScale);
+		break;
+	}
+	case '-': {
+		gTimeScale /= 1.5f;            // baja 33%
+		if (gTimeScale < 0.1f) gTimeScale = 0.1f;    // floor
+		display_text = "TimeScale x" + std::to_string(gTimeScale);
+		break;
+	}
+		case 'C': // Clear: borra todas las partículas
 	{
 		for (auto* it : gParticles) delete it;
 		gParticles.clear();

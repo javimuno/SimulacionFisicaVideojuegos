@@ -3,13 +3,13 @@
 #include "core.hpp"
 #include "Vector3D.h"
 
-// Elige el integrador por defecto: true = semi-implícito, false = explícito
+
 enum class IntegratorType { EulerExplicit, EulerSemiImplicit };
 
 class Particle
 {
 public:
-    // Constructora mínima para Actividad 1a (velocidad constante): acc=0, damping=1
+    // Constructora (velocidad constante): acc=0, damping=1
     Particle(const Vector3D& pos, const Vector3D& vel,
         const Vector3D& acc = Vector3D(0, 0, 0), float damping = 1.0f,
         IntegratorType integrator = IntegratorType::EulerSemiImplicit);

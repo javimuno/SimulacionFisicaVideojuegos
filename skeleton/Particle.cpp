@@ -8,7 +8,7 @@ Particle::Particle(const Vector3D& Pos, const Vector3D& Vel,
     : pos(Pos), vel(Vel), acc(Acc), damping(Damping), integrator(integ),
     pose(PxTransform(Pos.x, Pos.y, Pos.z)), renderItem(nullptr)
 {
-    // Esfera de radio 1.0 y color dorado para distinguirla
+    // Esfera de radio 1.0 y amarillo pacman
     renderItem = new RenderItem(CreateShape(PxSphereGeometry(1.0f)), &pose, { 1.0f, 0.8f, 0.2f, 1.0f });
     RegisterRenderItem(renderItem);
 }
