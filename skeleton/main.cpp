@@ -9,6 +9,7 @@
 #include "callbacks.hpp"
 
 #include <iostream>
+#include "Vector3D.h"
 
 std::string display_text = "This is a test";
 
@@ -30,6 +31,11 @@ PxDefaultCpuDispatcher*	gDispatcher = NULL;
 PxScene*				gScene      = NULL;
 ContactReportCallback gContactReportCallback;
 
+// RenderItems de la Práctica 0
+RenderItem* gOriginSphere = nullptr;
+RenderItem* gAxisX = nullptr;
+RenderItem* gAxisY = nullptr;
+RenderItem* gAxisZ = nullptr;
 
 // Initialize physics engine
 void initPhysics(bool interactive)
@@ -54,6 +60,36 @@ void initPhysics(bool interactive)
 	sceneDesc.filterShader = contactReportFilterShader;
 	sceneDesc.simulationEventCallback = &gContactReportCallback;
 	gScene = gPhysics->createScene(sceneDesc);
+
+	// ======== PRACTICA 0: ESFERA EN ORIGEN + EJES========
+	{
+		auto ToPxT = [](const Vector3D& v) { return physx::PxTransform(v.x, v.y, v.z); };
+
+		// distancias y tamaños pensados para que se vean bien con la cámara actual (50,50,50)
+		const float dist = 10.0f; // separación desde el origen
+		const float rCenter = 1.0f;  // radio esfera central (blanca)
+		const float rAxis = 0.8f;  // radio esferas de los ejes
+
+		Vector3D O(0.0f, 0.0f, 0.0f);
+		static physx::PxTransform poseO = ToPxT(O);
+		gOriginSphere = new RenderItem(CreateShape(physx::PxSphereGeometry(rCenter)), &poseO, { 1,1,1,1 }); // blanca-origen
+		RegisterRenderItem(gOriginSphere);
+
+		// Ejes: X (rojo), Y (verde), Z (azul)
+		static physx::PxTransform poseX = ToPxT(Vector3D(+dist, 0.0f, 0.0f));
+		static physx::PxTransform poseY = ToPxT(Vector3D(0.0f, +dist, 0.0f));
+		static physx::PxTransform poseZ = ToPxT(Vector3D(0.0f, 0.0f, +dist));
+
+		gAxisX = new RenderItem(CreateShape(physx::PxSphereGeometry(rAxis)), &poseX, { 1,0,0,1 }); // rojo (X)
+		gAxisY = new RenderItem(CreateShape(physx::PxSphereGeometry(rAxis)), &poseY, { 0,1,0,1 }); // verde (Y)
+		gAxisZ = new RenderItem(CreateShape(physx::PxSphereGeometry(rAxis)), &poseZ, { 0,0,1,1 }); // azul (Z)
+
+		RegisterRenderItem(gAxisX);
+		RegisterRenderItem(gAxisY);
+		RegisterRenderItem(gAxisZ);
+	}
+	// ======== FIN PRACTICA 0 ========
+
 	}
 
 
@@ -84,6 +120,13 @@ void cleanupPhysics(bool interactive)
 	transport->release();
 	
 	gFoundation->release();
+
+	// ======== PRACTICA 0: DEREGISTRAR ========
+	if (gOriginSphere) { DeregisterRenderItem(gOriginSphere); gOriginSphere = nullptr; }
+	if (gAxisX) { DeregisterRenderItem(gAxisX);        gAxisX = nullptr; }
+	if (gAxisY) { DeregisterRenderItem(gAxisY);        gAxisY = nullptr; }
+	if (gAxisZ) { DeregisterRenderItem(gAxisZ);        gAxisZ = nullptr; }
+	// ======== FIN PRACTICA 0 ========
 	}
 
 // Function called when a key is pressed
