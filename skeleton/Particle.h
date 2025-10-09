@@ -12,7 +12,7 @@ public:
     // Constructora (velocidad constante): acc=0, damping=1
     Particle(const Vector3D& pos, const Vector3D& vel,
         const Vector3D& acc = Vector3D(0, 0, 0), float damping = 1.0f,
-        IntegratorType integrator = IntegratorType::EulerSemiImplicit);
+        IntegratorType integrator = IntegratorType::EulerSemiImplicit,float mass = 1.0f);
 
     ~Particle();
 
@@ -26,11 +26,16 @@ public:
     // (Opcional) cambia integrador en runtime
     void setIntegrator(IntegratorType t) { integrator = t; }
 
+    // getter y setter de masa
+    float getMass() const { return mass; }
+    void setMass(float m) { mass = m; }
+
 private:
     Vector3D pos;       // posición
     Vector3D vel;       // velocidad
     Vector3D acc;       // aceleración
     float    damping;   // 0..1 ; v <- v * d^dt
+    float mass=1.0f;         // masa dela particula (aunque es independiente de g)
 
     IntegratorType integrator;
 

@@ -4,8 +4,8 @@ using namespace physx;
 
 Particle::Particle(const Vector3D& Pos, const Vector3D& Vel,
     const Vector3D& Acc, float Damping,
-    IntegratorType integ)
-    : pos(Pos), vel(Vel), acc(Acc), damping(Damping), integrator(integ),
+    IntegratorType integ,float Mass)
+    : pos(Pos), vel(Vel), acc(Acc), damping(Damping), integrator(integ), mass(Mass),
     pose(PxTransform(Pos.x, Pos.y, Pos.z)), renderItem(nullptr)
 {
     // Esfera de radio 1.0 y amarillo pacman

@@ -74,6 +74,57 @@ static void spawnParticle(IntegratorType integ, float damping, const Vector3D& v
 	gParticles.push_back(np);
 }
 
+// de la práctica 1.2 
+// === Fórmulas de real y simulada
+// 
+// ms = mr * (vr/vs)^2
+// gs = g  * (vs/vr)^2
+// 
+
+// === Proyectiles: conversión PxVec3 <-> Vector3D
+static Vector3D ToV3(const physx::PxVec3& v) { return Vector3D(v.x, v.y, v.z); }
+static physx::PxVec3 ToPx(const Vector3D& v) { return physx::PxVec3(v.x, v.y, v.z); }
+
+struct ProjectileSpec {
+	const char* name; // para saber cual es en pantalla y ver los valores
+	float m_real;     // kg (masa real)
+	float v_real;     // m/s (vel real del proyectil)
+	float v_sim;      // m/s (vel simulada)
+	float g_real = 9.81f; // m/s^2 (gravedad "real")
+	float damping = 0.99f; // damping general
+};
+
+static Particle* spawnProjectileFromCamera(const ProjectileSpec& spec, IntegratorType integ)
+{
+	using namespace physx;
+	// camara
+	auto* cam = GetCamera(); 
+	PxVec3 eye = cam->getEye();
+	PxVec3 dir = cam->getDir().getNormalized();
+
+	// Cálculo ms y gs segun las formulas
+	const float ms = spec.m_real * (spec.v_real * spec.v_real) / (spec.v_sim * spec.v_sim);
+	const float gs = spec.g_real * (spec.v_sim * spec.v_sim) / (spec.v_real * spec.v_real);
+
+	// Pos y vel iniciales
+	Vector3D pos = ToV3(eye);
+	Vector3D vel = ToV3(dir) * spec.v_sim;
+
+	//  Aceleración de la gravedad (negativas en balas suben) no aqui
+	Vector3D acc(0.0f, -gs, 0.0f);
+
+	// Creación de particula con masa simulada
+	Particle* p = new Particle(pos, vel, acc, spec.damping, integ, ms);
+	gParticles.push_back(p);
+
+	// Texto informativo del proyectil generado
+	display_text = std::string("Spawn [") + spec.name + "]: "
+		+ "ms=" + std::to_string(ms) + " kg, "
+		+ "gs=" + std::to_string(gs) + " m/s^2, "
+		+ "vs=" + std::to_string(spec.v_sim) + " m/s";
+	return p;
+}
+
 //==================================
 
 // Initialize physics engine
@@ -280,6 +331,45 @@ void keyPress(unsigned char key, const PxTransform& camera)
 		display_text = "Particulas limpiaditas toas toas toas";
 		break;
 	}
+		case 'B':  // Bala
+		{
+			ProjectileSpec S{
+				"Bala",
+				/* m_real */ 0.008f,     
+				/* v_real */ 380.0f,     
+				/* v_sim  */ 40.0f,      
+				/* g_real */ 9.81f,
+				/* damping */ 0.99f
+			};
+			spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
+			break;
+		}
+		case 'Z':  // lanza patatas, o pelotas de beisbol
+		{
+			ProjectileSpec S{
+				"Pelota",
+				/* m_real */ 0.145f,     // ej. peso medio patata 145 g
+				/* v_real */ 55.0f,      // ej. 55 m/s media de un lanzapatatas o 42 m/s beibsol
+				/* v_sim  */ 20.0f,
+				/* g_real */ 9.81f,
+				/* damping */ 0.995f
+			};
+			spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
+			break;
+		}
+		case 'H':  // lanza globos
+		{
+			ProjectileSpec S{
+				"Helio",
+				/* m_real */ 0.005f,
+				/* v_real */ 10.0f,
+				/* v_sim  */ 8.0f,
+				/* g_real */ -9.81f,     // ponemos negativa para que suba
+				/* damping */ 0.99f
+			};
+			spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
+			break;
+		}
 	default:
 		break;
 	}
