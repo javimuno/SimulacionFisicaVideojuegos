@@ -1,15 +1,15 @@
 #include "Particle.h"
-
+#include <cmath>
 using namespace physx;
 
 Particle::Particle(const Vector3D& Pos, const Vector3D& Vel,
     const Vector3D& Acc, float Damping,
-    IntegratorType integ,float Mass)
+    IntegratorType integ,float Mass, PxVec4 color, float radius)
     : pos(Pos), vel(Vel), acc(Acc), damping(Damping), integrator(integ), mass(Mass),
     pose(PxTransform(Pos.x, Pos.y, Pos.z)), renderItem(nullptr)
 {
     // Esfera de radio 1.0 y amarillo pacman
-    renderItem = new RenderItem(CreateShape(PxSphereGeometry(1.0f)), &pose, { 1.0f, 0.8f, 0.2f, 1.0f });
+    renderItem = new RenderItem(CreateShape(PxSphereGeometry(1.0f)), &pose, color); //{ 1.0f, 0.8f, 0.2f, 1.0f } color base cambiado p2
     RegisterRenderItem(renderItem);
 }
 

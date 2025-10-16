@@ -11,8 +11,12 @@ class Particle
 public:
     // Constructora (velocidad constante): acc=0, damping=1
     Particle(const Vector3D& pos, const Vector3D& vel,
-        const Vector3D& acc = Vector3D(0, 0, 0), float damping = 1.0f,
-        IntegratorType integrator = IntegratorType::EulerSemiImplicit,float mass = 1.0f);
+        const Vector3D& acc = Vector3D(0, 0, 0),
+        float damping = 1.0f,
+        IntegratorType integrator = IntegratorType::EulerSemiImplicit,
+        float mass = 1.0f,
+        physx::PxVec4 color = { 1.0f, 0.8f, 0.2f, 1.0f },
+        float radius = 1.0f);
 
     ~Particle();
 
@@ -29,6 +33,9 @@ public:
     // getter y setter de masa
     float getMass() const { return mass; }
     void setMass(float m) { mass = m; }
+
+    // Para comprobar límites de “espacio de acción”
+    const Vector3D& getPosition() const { return pos; }
 
 private:
     Vector3D pos;       // posición
