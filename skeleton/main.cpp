@@ -52,12 +52,6 @@ RenderItem* gAxisX = nullptr;
 RenderItem* gAxisY = nullptr;
 RenderItem* gAxisZ = nullptr;
 
-// Partcitula
-
-//Particle* p = nullptr;
-
-// P1: lista de partículas controladas con teclado
-std::vector<Particle*> gParticles;
 
 // escala de tiempo ---->> de momento esto no 
 float gTimeScale = 1.0f; //multiplicador de dt en la integración
@@ -110,13 +104,7 @@ static Vector3D nextSpawnPos()
 	return Vector3D(x, y, z);
 }
 
-// Spawner genérico para un caso concreto (integrador + damping + vel + acc)
-//static void spawnParticle(IntegratorType integ, float damping, const Vector3D& vel, const Vector3D& acc)
-//{
-//	Vector3D pos = nextSpawnPos();
-//	Particle* np = new Particle(pos, vel, acc, damping, integ);
-//	gParticles.push_back(np);
-//}
+
 
 // de la práctica 1.2 
 // === Fórmulas de real y simulada
@@ -157,9 +145,7 @@ struct ProjectileSpec {
 //	//  Aceleración de la gravedad (negativas en balas suben) no aqui
 //	Vector3D acc(0.0f, -gs, 0.0f);
 //
-//	// Creación de particula con masa simulada
-//	Particle* p = new Particle(pos, vel, acc, spec.damping, integ, ms);
-//	gParticles.push_back(p);
+
 //
 //	// Texto informativo del proyectil generado
 //	display_text = std::string("Spawn [") + spec.name + "]: "
@@ -213,7 +199,7 @@ void initPhysics(bool interactive)
 	{
 		auto ToPxT = [](const Vector3D& v) { return physx::PxTransform(v.x, v.y, v.z); };
 
-		// distancias y tamaños pensados para que se vean bien con la cámara actual (50,50,50)
+		// distancias y tamaños 
 		const float dist = 10.0f; // separación desde el origen
 		const float rCenter = 1.0f;  // radio esfera central (blanca)
 		const float rAxis = 0.8f;  // radio esferas de los ejes
@@ -246,9 +232,7 @@ void initPhysics(bool interactive)
 		Vector3D accel(0, 0, 0);                  // sin aceleración
 		float damping = 1.0f;                     // sin damping (velocidad constante)
 
-		//p = new Particle(startPos, startVel, accel, damping, IntegratorType::EulerSemiImplicit);
-		// Puedes probar también el explícito para ver diferencias:
-		// p->setIntegrator(IntegratorType::EulerExplicit);
+		
 	}
 
 	// === P1 Act 2: aceleración constante ===
@@ -258,7 +242,7 @@ void initPhysics(bool interactive)
 		Vector3D accel(0.0f, -0.2f, 0.0f);       // aceleración (gravedad suave) _>cambiar aceleracion cambiar comportamiento AQUI JAVI AQUI
 		float damping = 1.0f;                    // sin damping aún
 
-		//p = new Particle(startPos, startVel, accel, damping, IntegratorType::EulerSemiImplicit);
+		
 	}
 
 	// === P1 Act 3: damping ===
@@ -268,9 +252,7 @@ void initPhysics(bool interactive)
 		Vector3D accel(2.0f, -0.0f, 2.0f);
 		float damping = 0.99f; // 0-1 (0.99 Porque es el valor apropiado para corregir -> teoría Raul Lab)
 
-		//p = new Particle(startPos, startVel, accel, damping, IntegratorType::EulerSemiImplicit);
-		// o, si ya la creaste:
-		// p->setDamping(0.99f);
+		
 	}
 
 	//===========EMISORES=======================
@@ -308,8 +290,8 @@ void initPhysics(bool interactive)
 		c3.speed = 10.0f;
 		c3.lifetime = 1.6f;
 		c3.damping = 0.985f;
-		c3.color = { 1.0f,0.8f,0.2f,1.0f };
-		c3.radius = 0.07f;
+		c3.color = { 1.0f,0.824f,0.2f,1.0f };
+		c3.radius = 0.37f;
 		c3.rate = 4.0f;
 		c3.maxAlive = 180;
 		c3.active = false;
@@ -337,13 +319,14 @@ void stepPhysics(bool interactive, double t)
 	// alterador de tiempo --->> De momento no funciona o no se me ocurre
 	float dt = static_cast<float>(t) * gTimeScale;
 	// Integra TODAS con dt real
-	//for (auto* it : gParticles)
-		//->integrate(dt);
+	
 
 	
 
 	if (gMode == Mode::Projectiles) {
 		for (auto* p : gProjectiles) p->integrate(dt);
+		//limpieza de cositas
+		gWorld.removeOutside(gProjectiles);
 	}
 		// Emitters
 	else {
@@ -351,14 +334,13 @@ void stepPhysics(bool interactive, double t)
 		gEmit1->update(dt);
 		gEmit2->update(dt);
 		gEmit3->update(dt);
+		gEmit1->cullOutside(gWorld);
+		gEmit2->cullOutside(gWorld);
+		gEmit3->cullOutside(gWorld);
 	}
+		
 
-	gEmit1->cullOutside(gWorld);
-	gEmit2->cullOutside(gWorld);
-	gEmit3->cullOutside(gWorld);
-
-	//limpieza de cositas
-	gWorld.removeOutside(gProjectiles);
+	
 }
 
 // Function to clean data
@@ -371,17 +353,6 @@ void cleanupPhysics(bool interactive)
 	ClearProjectiles();
 	ClearEmitters();
 
-	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
-	gScene->release();
-	gDispatcher->release();
-	// -----------------------------------------------------
-	gPhysics->release();	
-	PxPvdTransport* transport = gPvd->getTransport();
-	gPvd->release();
-	transport->release();
-	
-	gFoundation->release();
-
 	// ======== PRACTICA 0: DEREGISTRAR ========
 	if (gOriginSphere) { DeregisterRenderItem(gOriginSphere); gOriginSphere = nullptr; }
 	if (gAxisX) { DeregisterRenderItem(gAxisX);        gAxisX = nullptr; }
@@ -392,24 +363,35 @@ void cleanupPhysics(bool interactive)
 	//=====P1===
 	//if (p) { delete p; p = nullptr; }
 
-	// P1: liberar partículas creadas a mano
-	for (auto* it : gParticles) delete it;
-	gParticles.clear();
+	
 
-	for (auto* it : gProjectiles) delete it;
-	gProjectiles.clear();
+	//for (auto* it : gProjectiles) delete it;
+	//gProjectiles.clear();
 
-	// Emitters (objetos)
+	// Emitters (objetos)a
 	delete gEmit1; gEmit1 = nullptr;
 	delete gEmit2; gEmit2 = nullptr;
 	delete gEmit3; gEmit3 = nullptr;
-	}
+
+
+	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
+	gScene->release();
+	gDispatcher->release();
+	// -----------------------------------------------------
+	gPhysics->release();	
+	PxPvdTransport* transport = gPvd->getTransport();
+	gPvd->release();
+	transport->release();
+	
+	gFoundation->release();
+}
+	
 
 // Function called when a key is pressed
 void keyPress(unsigned char key, const PxTransform& camera)
 {
 	PX_UNUSED(camera);
-#ifdef ANTESP1
+#if 0
 	//switch antes de P2
 //switch(toupper(key))
 //{
@@ -461,8 +443,7 @@ void keyPress(unsigned char key, const PxTransform& camera)
 //}
 //	case 'C': // Clear: borra todas las partículas
 //{
-//	for (auto* it : gParticles) delete it;
-//	gParticles.clear();
+
 //	display_text = "Particulas limpiaditas toas toas toas";
 //	break;
 //}

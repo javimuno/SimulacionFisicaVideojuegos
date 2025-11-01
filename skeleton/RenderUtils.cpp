@@ -97,6 +97,12 @@ void renderCallback()
 
 	startRender(sCamera->getEye(), sCamera->getDir());
 
+	//// justo antes del for actual
+	//std::vector<const RenderItem*> snapshot;
+	//snapshot.reserve(gRenderItems.size());
+	//snapshot.assign(gRenderItems.begin(), gRenderItems.end());
+
+	
 	//fprintf(stderr, "Num Render Items: %d\n", static_cast<int>(gRenderItems.size()));
 	for (auto it = gRenderItems.begin(); it != gRenderItems.end(); ++it)
 	{
@@ -155,16 +161,34 @@ void renderLoop()
 	glutMainLoop();
 }
 
+static size_t gRegCount = 0, gDeregCount = 0;
+
 void RegisterRenderItem(const RenderItem* _item)
 {
-	gRenderItems.push_back(_item);
+	if (!_item) return;
+	auto it = std::find(gRenderItems.begin(), gRenderItems.end(), _item);
+	if (it == gRenderItems.end()) {          // evita duplicados
+		gRenderItems.push_back(_item);
+		++gRegCount;
+	}
+	else {
+		// fprintf(stderr, "[WARN] Register duplicado %p\n", (void*)_item);
+	}
 }
 
 void DeregisterRenderItem(const RenderItem* _item)
 {
-	auto it = find(gRenderItems.begin(), gRenderItems.end(), _item);
-	gRenderItems.erase(it);
+	if (!_item) return;
+	auto it = std::find(gRenderItems.begin(), gRenderItems.end(), _item);
+	if (it != gRenderItems.end()) {
+		gRenderItems.erase(it);
+		++gDeregCount;
+	}
+	else {
+		// fprintf(stderr, "[WARN] Deregister de item NO presente %p\n", (void*)_item);
+	}
 }
+
 
 double GetLastTime()
 {

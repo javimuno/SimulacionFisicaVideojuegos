@@ -43,7 +43,10 @@ public:
     Particle(Particle&&) = delete;
     Particle& operator=(Particle&&) = delete;
 
+    void setOrigin(char o) { origin = o; }
+
 private:
+private: char origin = '?';
     Vector3D pos;       // posición
     Vector3D vel;       // velocidad
     Vector3D acc;       // aceleración

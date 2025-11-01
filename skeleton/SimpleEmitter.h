@@ -31,6 +31,7 @@ public:
     void update(float dt);                   // integra, borra muertas y emite
     void clear();                            // borra TODAS sus partículas
     void cullOutside(const class WorldBounds& world);
+    size_t aliveCount() const { return alive.size(); }
 
 private:
     struct Live {
