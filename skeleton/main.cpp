@@ -1,23 +1,30 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <ctype.h>
-
 #include <PxPhysicsAPI.h>
-
 #include <vector>
+#include <string>
+#include <iostream>
 
 #include "core.hpp"
 #include "RenderUtils.hpp"
 #include "callbacks.hpp"
 
-#include <iostream>
 #include "Vector3D.h"
 #include "Particle.h"
-#include <string>
-
+#include "SimpleEmitter.h"
 
 //=========== GLOBALES =========
 
-std::string display_text = "This is a test";
+//std::string display_text = "This is a test";
 
+//=========== MODO ===========
+enum class Mode { Projectiles, Emitters };
+static Mode gMode = Mode::Projectiles;
+
+//=========== HUD ============
+std::string display_text = "P:Projectiles  E:Emitters";
 
 using namespace physx;
 
@@ -52,6 +59,40 @@ std::vector<Particle*> gParticles;
 // escala de tiempo ---->> de momento esto no 
 float gTimeScale = 1.0f; //multiplicador de dt en la integración
 
+// Emitters (3 emisores) + helpers
+static SimpleEmitter* gEmit1 = nullptr;
+static SimpleEmitter* gEmit2 = nullptr;
+static SimpleEmitter* gEmit3 = nullptr;
+static std::vector<Particle*> gProjectiles;
+
+static void ClearProjectiles() {
+	for (auto* p : gProjectiles) delete p;
+	gProjectiles.clear();
+}
+
+static void ClearEmitters() {
+	if (gEmit1) gEmit1->clear();
+	if (gEmit2) gEmit2->clear();
+	if (gEmit3) gEmit3->clear();
+}
+
+static void SetMode(Mode m) {
+	if (gMode == m) return;
+	if (m == Mode::Projectiles) {
+		// volvemos a proyectiles: apagamos y limpiamos emisores
+		if (gEmit1) gEmit1->setActive(false);
+		if (gEmit2) gEmit2->setActive(false);
+		if (gEmit3) gEmit3->setActive(false);
+		ClearEmitters();
+		display_text = "Projectiles: B/Z/H, C  |  +/- time";
+	}
+	else { // Emitters
+		// vamos a emisores: limpiamos proyectiles
+		ClearProjectiles();
+		display_text = "Emitters: 1/2/3 toggle, [ ] rate, C clear  |  +/- time";
+	}
+	gMode = m;
+}
 
 //======================= FIN GLOBALES=================
 
@@ -123,6 +164,20 @@ static Particle* spawnProjectileFromCamera(const ProjectileSpec& spec, Integrato
 		+ "gs=" + std::to_string(gs) + " m/s^2, "
 		+ "vs=" + std::to_string(spec.v_sim) + " m/s";
 	return p;
+}
+static void SpawnProjectile(float speed, float damping, physx::PxVec4 color, float radius)
+{
+	auto* cam = GetCamera();
+	PxVec3 eye = cam->getEye();
+	PxVec3 dir = cam->getDir().getNormalized();
+
+	Vector3D pos(eye.x, eye.y, eye.z);
+	Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);
+	Vector3D acc(0, -9.8f, 0);
+
+	gProjectiles.push_back(
+		new Particle(pos, vel, acc, damping, IntegratorType::EulerSemiImplicit, 1.0f, color, radius)
+	);
 }
 
 //==================================
@@ -215,6 +270,50 @@ void initPhysics(bool interactive)
 		// p->setDamping(0.99f);
 	}
 
+	//===========EMISORES=======================
+
+	{
+		SimpleEmitterConfig c1; // Azul: fuente suave
+		c1.position = { 0,0,0 };
+		c1.posJitter = { 0.15f,0.15f,0.15f };
+		c1.speed = 8.0f;
+		c1.lifetime = 3.0f;
+		c1.damping = 0.99f;
+		c1.color = { 0.2f,0.6f,1.0f,1.0f };
+		c1.radius = 0.12f;
+		c1.rate = 6.0f;     // pps
+		c1.maxAlive = 250;
+		c1.active = false;
+		gEmit1 = new SimpleEmitter(c1);
+
+		SimpleEmitterConfig c2; // Blanco: niebla ligera
+		c2.position = { 0,2,0 };
+		c2.posJitter = { 4.0f,0.4f,4.0f };
+		c2.speed = 1.2f;
+		c2.lifetime = 2.5f;
+		c2.damping = 0.995f;
+		c2.color = { 1,1,1,1 };
+		c2.radius = 0.08f;
+		c2.rate = 8.0f;
+		c2.maxAlive = 200;
+		c2.active = false;
+		gEmit2 = new SimpleEmitter(c2);
+
+		SimpleEmitterConfig c3; // Amarillo: chispas
+		c3.position = { 3,3,0 };
+		c3.posJitter = { 0.08f,0.08f,0.08f };
+		c3.speed = 10.0f;
+		c3.lifetime = 1.6f;
+		c3.damping = 0.985f;
+		c3.color = { 1.0f,0.8f,0.2f,1.0f };
+		c3.radius = 0.07f;
+		c3.rate = 4.0f;
+		c3.maxAlive = 180;
+		c3.active = false;
+		gEmit3 = new SimpleEmitter(c3);
+	}
+
+	SetMode(Mode::Projectiles);
 	}
 
 
@@ -235,8 +334,18 @@ void stepPhysics(bool interactive, double t)
 	// alterador de tiempo --->> De momento no funciona o no se me ocurre
 	float dt = static_cast<float>(t) * gTimeScale;
 	// Integra TODAS con dt real
-	for (auto* it : gParticles)
-		it->integrate(dt);
+	//for (auto* it : gParticles)
+		//->integrate(dt);
+
+	if (gMode == Mode::Projectiles) {
+		for (auto* p : gProjectiles) p->integrate(dt);
+	}
+	// Emitters
+	else {
+		gEmit1->update(dt);
+		gEmit2->update(dt);
+		gEmit3->update(dt);
+	}
 }
 
 // Function to clean data
@@ -244,6 +353,10 @@ void stepPhysics(bool interactive, double t)
 void cleanupPhysics(bool interactive)
 {
 	PX_UNUSED(interactive);
+
+	//LIMPIEZA PRINCIPAL
+	ClearProjectiles();
+	ClearEmitters();
 
 	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
 	gScene->release();
@@ -269,110 +382,163 @@ void cleanupPhysics(bool interactive)
 	// P1: liberar partículas creadas a mano
 	for (auto* it : gParticles) delete it;
 	gParticles.clear();
+
+	// Emitters (objetos)
+	delete gEmit1; gEmit1 = nullptr;
+	delete gEmit2; gEmit2 = nullptr;
+	delete gEmit3; gEmit3 = nullptr;
 	}
 
 // Function called when a key is pressed
 void keyPress(unsigned char key, const PxTransform& camera)
 {
 	PX_UNUSED(camera);
+#ifdef ANTESP1
+	//switch antes de P2
+//switch(toupper(key))
+//{
+////case 'B': break;
+////case ' ':	break;
+//case '1': // Euler explícito, SIN damping
+//{
+//	spawnParticle(IntegratorType::EulerExplicit, 1.0f,
+//		Vector3D(2.5f, 6.5f, 0.0f),
+//		Vector3D(0.0f, -9.8f, 0.0f));
+//	display_text = "Spawn: Euler EXP, damping=1.0 (sin damping)";
+//	break;
+//}
+//case '2': // Euler explícito, CON damping
+//{
+//	spawnParticle(IntegratorType::EulerExplicit, 0.90f,
+//		Vector3D(2.5f, 60.5f, 0.0f),
+//		Vector3D(0.0f, -9.8f, 0.0f));
+//	display_text = "Spawn: Euler EXP, damping=0.99";
+//	break;
+//}
+//case '3': // Euler semi-implícito, SIN damping
+//{
+//	spawnParticle(IntegratorType::EulerSemiImplicit, 1.0f,
+//		Vector3D(2.5f, 6.5f, 0.0f),
+//		Vector3D(0.0f, -9.8f, 0.0f));
+//	display_text = "Spawn: Euler SEMI, damping=1.0 (sin damping)";
+//	break;
+//}
+//case '4': // Euler semi-implícito, CON damping
+//{
+//	spawnParticle(IntegratorType::EulerSemiImplicit, 0.90f,
+//		Vector3D(2.5f, 60.5f, 0.0f),
+//		Vector3D(0.0f, -9.8f, 0.0f));
+//	display_text = "Spawn: Euler SEMI, damping=0.99";
+//	break;
+//}
+//case '+': {
+//	gTimeScale *= 1.5f;            // sube 50%
+//	if (gTimeScale > 10.0f) gTimeScale = 10.0f;  // cap
+//	display_text = "TimeScale x" + std::to_string(gTimeScale);
+//	break;
+//}
+//case '-': {
+//	gTimeScale /= 1.5f;            // baja 33%
+//	if (gTimeScale < 0.1f) gTimeScale = 0.1f;    // floor
+//	display_text = "TimeScale x" + std::to_string(gTimeScale);
+//	break;
+//}
+//	case 'C': // Clear: borra todas las partículas
+//{
+//	for (auto* it : gParticles) delete it;
+//	gParticles.clear();
+//	display_text = "Particulas limpiaditas toas toas toas";
+//	break;
+//}
+//	case 'B':  // Bala
+//	{
+//		ProjectileSpec S{
+//			"Bala",
+//			/* m_real */ 0.008f,     
+//			/* v_real */ 380.0f,     
+//			/* v_sim  */ 40.0f,      
+//			/* g_real */ 9.81f,
+//			/* damping */ 0.99f
+//		};
+//		spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
+//		break;
+//	}
+//	case 'Z':  // lanza patatas, o pelotas de beisbol
+//	{
+//		ProjectileSpec S{
+//			"Pelota",
+//			/* m_real */ 0.145f,     // ej. peso medio patata 145 g
+//			/* v_real */ 55.0f,      // ej. 55 m/s media de un lanzapatatas o 42 m/s beibsol
+//			/* v_sim  */ 20.0f,
+//			/* g_real */ 9.81f,
+//			/* damping */ 0.995f
+//		};
+//		spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
+//		break;
+//	}
+//	case 'H':  // lanza globos
+//	{
+//		ProjectileSpec S{
+//			"Helio",
+//			/* m_real */ 0.005f,
+//			/* v_real */ 10.0f,
+//			/* v_sim  */ 8.0f,
+//			/* g_real */ -9.81f,     // ponemos negativa para que suba
+//			/* damping */ 0.99f
+//		};
+//		spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
+//		break;
+//	}
+//default:
+//	break;
+//}
 
-	switch(toupper(key))
-	{
-	//case 'B': break;
-	//case ' ':	break;
-	case '1': // Euler explícito, SIN damping
-	{
-		spawnParticle(IntegratorType::EulerExplicit, 1.0f,
-			Vector3D(2.5f, 6.5f, 0.0f),
-			Vector3D(0.0f, -9.8f, 0.0f));
-		display_text = "Spawn: Euler EXP, damping=1.0 (sin damping)";
-		break;
-	}
-	case '2': // Euler explícito, CON damping
-	{
-		spawnParticle(IntegratorType::EulerExplicit, 0.90f,
-			Vector3D(2.5f, 60.5f, 0.0f),
-			Vector3D(0.0f, -9.8f, 0.0f));
-		display_text = "Spawn: Euler EXP, damping=0.99";
-		break;
-	}
-	case '3': // Euler semi-implícito, SIN damping
-	{
-		spawnParticle(IntegratorType::EulerSemiImplicit, 1.0f,
-			Vector3D(2.5f, 6.5f, 0.0f),
-			Vector3D(0.0f, -9.8f, 0.0f));
-		display_text = "Spawn: Euler SEMI, damping=1.0 (sin damping)";
-		break;
-	}
-	case '4': // Euler semi-implícito, CON damping
-	{
-		spawnParticle(IntegratorType::EulerSemiImplicit, 0.90f,
-			Vector3D(2.5f, 60.5f, 0.0f),
-			Vector3D(0.0f, -9.8f, 0.0f));
-		display_text = "Spawn: Euler SEMI, damping=0.99";
-		break;
-	}
-	case '+': {
-		gTimeScale *= 1.5f;            // sube 50%
-		if (gTimeScale > 10.0f) gTimeScale = 10.0f;  // cap
-		display_text = "TimeScale x" + std::to_string(gTimeScale);
-		break;
-	}
-	case '-': {
-		gTimeScale /= 1.5f;            // baja 33%
-		if (gTimeScale < 0.1f) gTimeScale = 0.1f;    // floor
-		display_text = "TimeScale x" + std::to_string(gTimeScale);
-		break;
-	}
-		case 'C': // Clear: borra todas las partículas
-	{
-		for (auto* it : gParticles) delete it;
-		gParticles.clear();
-		display_text = "Particulas limpiaditas toas toas toas";
-		break;
-	}
-		case 'B':  // Bala
-		{
-			ProjectileSpec S{
-				"Bala",
-				/* m_real */ 0.008f,     
-				/* v_real */ 380.0f,     
-				/* v_sim  */ 40.0f,      
-				/* g_real */ 9.81f,
-				/* damping */ 0.99f
-			};
-			spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
-			break;
+//Switch en P2  
+#endif // ANTESP1
+
+switch (toupper(key))
+{
+case 'P': SetMode(Mode::Projectiles); break;
+case 'E': SetMode(Mode::Emitters);    break;
+
+case '+':
+	gTimeScale = std::min(10.0f, gTimeScale * 1.5f);
+	display_text = "TimeScale x" + std::to_string(gTimeScale);
+	break;
+case '-':
+	gTimeScale = std::max(0.1f, gTimeScale / 1.5f);
+	display_text = "TimeScale x" + std::to_string(gTimeScale);
+	break;
+
+default:
+	if (gMode == Mode::Projectiles) {
+		switch (toupper(key)) {
+		case 'B': SpawnProjectile(40.0f, 0.99f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f); break; // bala (amarillo)
+		case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f); break; // pelota (blanco)
+		case 'H': SpawnProjectile(8.0f, 0.99f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f); break; // helio (azulado)
+		case 'C': ClearProjectiles(); display_text = "Projectiles: clear"; break;
+		default: break;
 		}
-		case 'Z':  // lanza patatas, o pelotas de beisbol
-		{
-			ProjectileSpec S{
-				"Pelota",
-				/* m_real */ 0.145f,     // ej. peso medio patata 145 g
-				/* v_real */ 55.0f,      // ej. 55 m/s media de un lanzapatatas o 42 m/s beibsol
-				/* v_sim  */ 20.0f,
-				/* g_real */ 9.81f,
-				/* damping */ 0.995f
-			};
-			spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
-			break;
-		}
-		case 'H':  // lanza globos
-		{
-			ProjectileSpec S{
-				"Helio",
-				/* m_real */ 0.005f,
-				/* v_real */ 10.0f,
-				/* v_sim  */ 8.0f,
-				/* g_real */ -9.81f,     // ponemos negativa para que suba
-				/* damping */ 0.99f
-			};
-			spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
-			break;
-		}
-	default:
-		break;
 	}
+	else {
+		switch (toupper(key)) {
+		case '1': gEmit1->setActive(!gEmit1->isActive()); break;
+		case '2': gEmit2->setActive(!gEmit2->isActive()); break;
+		case '3': gEmit3->setActive(!gEmit3->isActive()); break;
+		case '[': if (gEmit1->isActive()) gEmit1->changeRate(-1.0f);
+			if (gEmit2->isActive()) gEmit2->changeRate(-1.0f);
+			if (gEmit3->isActive()) gEmit3->changeRate(-1.0f);
+			display_text = "Emitters: rate -"; break;
+		case ']': if (gEmit1->isActive()) gEmit1->changeRate(+1.0f);
+			if (gEmit2->isActive()) gEmit2->changeRate(+1.0f);
+			if (gEmit3->isActive()) gEmit3->changeRate(+1.0f);
+			display_text = "Emitters: rate +"; break;
+		case 'C': ClearEmitters();  display_text = "Emitters: clear"; break;
+		default: break;
+		}
+	}
+	break;
+}
 }
 
 void onCollision(physx::PxActor* actor1, physx::PxActor* actor2)
