@@ -10,11 +10,11 @@ Particle::Particle(const Vector3D& Pos, const Vector3D& Vel,
 
     //BARRERA
 
-    if (!std::isfinite(radius) || radius <= 0.0f) radius = 1.0f;
-renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(radius)), &pose, color);
+    
 {
     // Esfera de radio 1.0 y amarillo pacman
-    renderItem = new RenderItem(CreateShape(PxSphereGeometry(radius)), &pose, color); //{ 1.0f, 0.8f, 0.2f, 1.0f } color base cambiado p2
+    if (!std::isfinite(radius) || radius <= 0.0f) radius = 1.0f;
+    renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(radius)), &pose, color); //{ 1.0f, 0.8f, 0.2f, 1.0f } color base cambiado p2
     RegisterRenderItem(renderItem);
 }
 

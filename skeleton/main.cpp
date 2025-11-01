@@ -14,10 +14,13 @@
 #include "Vector3D.h"
 #include "Particle.h"
 #include "SimpleEmitter.h"
+#include "WorldBounds.h"
 
 //=========== GLOBALES =========
 
 //std::string display_text = "This is a test";
+// Crea los límites una vez
+WorldBounds gWorld(Vector3D(-200, -50, -200), Vector3D(200, 200, 200));
 
 //=========== MODO ===========
 enum class Mode { Projectiles, Emitters };
@@ -108,12 +111,12 @@ static Vector3D nextSpawnPos()
 }
 
 // Spawner genérico para un caso concreto (integrador + damping + vel + acc)
-static void spawnParticle(IntegratorType integ, float damping, const Vector3D& vel, const Vector3D& acc)
-{
-	Vector3D pos = nextSpawnPos();
-	Particle* np = new Particle(pos, vel, acc, damping, integ);
-	gParticles.push_back(np);
-}
+//static void spawnParticle(IntegratorType integ, float damping, const Vector3D& vel, const Vector3D& acc)
+//{
+//	Vector3D pos = nextSpawnPos();
+//	Particle* np = new Particle(pos, vel, acc, damping, integ);
+//	gParticles.push_back(np);
+//}
 
 // de la práctica 1.2 
 // === Fórmulas de real y simulada
@@ -135,36 +138,36 @@ struct ProjectileSpec {
 	float damping = 0.99f; // damping general
 };
 
-static Particle* spawnProjectileFromCamera(const ProjectileSpec& spec, IntegratorType integ)
-{
-	using namespace physx;
-	// camara
-	auto* cam = GetCamera(); 
-	PxVec3 eye = cam->getEye();
-	PxVec3 dir = cam->getDir().getNormalized();
-
-	// Cálculo ms y gs segun las formulas
-	const float ms = spec.m_real * (spec.v_real * spec.v_real) / (spec.v_sim * spec.v_sim);
-	const float gs = spec.g_real * (spec.v_sim * spec.v_sim) / (spec.v_real * spec.v_real);
-
-	// Pos y vel iniciales
-	Vector3D pos = ToV3(eye);
-	Vector3D vel = ToV3(dir) * spec.v_sim;
-
-	//  Aceleración de la gravedad (negativas en balas suben) no aqui
-	Vector3D acc(0.0f, -gs, 0.0f);
-
-	// Creación de particula con masa simulada
-	Particle* p = new Particle(pos, vel, acc, spec.damping, integ, ms);
-	gParticles.push_back(p);
-
-	// Texto informativo del proyectil generado
-	display_text = std::string("Spawn [") + spec.name + "]: "
-		+ "ms=" + std::to_string(ms) + " kg, "
-		+ "gs=" + std::to_string(gs) + " m/s^2, "
-		+ "vs=" + std::to_string(spec.v_sim) + " m/s";
-	return p;
-}
+//static Particle* spawnProjectileFromCamera(const ProjectileSpec& spec, IntegratorType integ)
+//{
+//	using namespace physx;
+//	// camara
+//	auto* cam = GetCamera(); 
+//	PxVec3 eye = cam->getEye();
+//	PxVec3 dir = cam->getDir().getNormalized();
+//
+//	// Cálculo ms y gs segun las formulas
+//	const float ms = spec.m_real * (spec.v_real * spec.v_real) / (spec.v_sim * spec.v_sim);
+//	const float gs = spec.g_real * (spec.v_sim * spec.v_sim) / (spec.v_real * spec.v_real);
+//
+//	// Pos y vel iniciales
+//	Vector3D pos = ToV3(eye);
+//	Vector3D vel = ToV3(dir) * spec.v_sim;
+//
+//	//  Aceleración de la gravedad (negativas en balas suben) no aqui
+//	Vector3D acc(0.0f, -gs, 0.0f);
+//
+//	// Creación de particula con masa simulada
+//	Particle* p = new Particle(pos, vel, acc, spec.damping, integ, ms);
+//	gParticles.push_back(p);
+//
+//	// Texto informativo del proyectil generado
+//	display_text = std::string("Spawn [") + spec.name + "]: "
+//		+ "ms=" + std::to_string(ms) + " kg, "
+//		+ "gs=" + std::to_string(gs) + " m/s^2, "
+//		+ "vs=" + std::to_string(spec.v_sim) + " m/s";
+//	return p;
+//}
 static void SpawnProjectile(float speed, float damping, physx::PxVec4 color, float radius)
 {
 	auto* cam = GetCamera();
@@ -337,15 +340,25 @@ void stepPhysics(bool interactive, double t)
 	//for (auto* it : gParticles)
 		//->integrate(dt);
 
+	
+
 	if (gMode == Mode::Projectiles) {
 		for (auto* p : gProjectiles) p->integrate(dt);
 	}
-	// Emitters
+		// Emitters
 	else {
+		if (gMode == Mode::Emitters && !gProjectiles.empty()) ClearProjectiles();
 		gEmit1->update(dt);
 		gEmit2->update(dt);
 		gEmit3->update(dt);
 	}
+
+	gEmit1->cullOutside(gWorld);
+	gEmit2->cullOutside(gWorld);
+	gEmit3->cullOutside(gWorld);
+
+	//limpieza de cositas
+	gWorld.removeOutside(gProjectiles);
 }
 
 // Function to clean data
@@ -382,6 +395,9 @@ void cleanupPhysics(bool interactive)
 	// P1: liberar partículas creadas a mano
 	for (auto* it : gParticles) delete it;
 	gParticles.clear();
+
+	for (auto* it : gProjectiles) delete it;
+	gProjectiles.clear();
 
 	// Emitters (objetos)
 	delete gEmit1; gEmit1 = nullptr;

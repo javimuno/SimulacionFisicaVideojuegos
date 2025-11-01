@@ -261,6 +261,7 @@
     <ClCompile Include="Render\Render.cpp" />
     <ClCompile Include="SimpleEmitter.cpp" />
     <ClCompile Include="Vector3D.cpp" />
+    <ClCompile Include="WorldBounds.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="callbacks.hpp" />
@@ -271,6 +272,7 @@
     <ClInclude Include="Render\Render.h" />
     <ClInclude Include="SimpleEmitter.h" />
     <ClInclude Include="Vector3D.h" />
+    <ClInclude Include="WorldBounds.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

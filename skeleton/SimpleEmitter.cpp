@@ -3,6 +3,7 @@
 #endif
 #include "SimpleEmitter.h"
 #include <cmath>
+#include "WorldBounds.h"
 
 using namespace physx;
 
@@ -93,5 +94,19 @@ void SimpleEmitter::update(float dt) {
             IntegratorType::EulerSemiImplicit,
             1.0f, cfg.color, cfg.radius);
         alive.push_back({ p, 0.0f });
+    }
+}
+
+void SimpleEmitter::cullOutside(const WorldBounds& world) {
+    for (auto it = alive.begin(); it != alive.end(); ) {
+        Particle* p = it->p;
+        const Vector3D& pos = p->getPosition();
+        if (!world.isFinite(pos) || world.isOutside(pos)) {
+            delete p;              // ~Particle() -> DeregisterRenderItem(...)
+            it = alive.erase(it);
+        }
+        else {
+            ++it;
+        }
     }
 }

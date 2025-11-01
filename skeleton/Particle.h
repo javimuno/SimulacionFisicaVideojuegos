@@ -37,6 +37,12 @@ public:
     // Para comprobar límites de “espacio de acción”
     const Vector3D& getPosition() const { return pos; }
 
+    // Evita copias/moves accidentales que causarían doble deregistro
+    Particle(const Particle&) = delete;
+    Particle& operator=(const Particle&) = delete;
+    Particle(Particle&&) = delete;
+    Particle& operator=(Particle&&) = delete;
+
 private:
     Vector3D pos;       // posición
     Vector3D vel;       // velocidad

@@ -30,6 +30,7 @@ public:
     void changeRate(float delta);            // +/- por segundo
     void update(float dt);                   // integra, borra muertas y emite
     void clear();                            // borra TODAS sus partículas
+    void cullOutside(const class WorldBounds& world);
 
 private:
     struct Live {
