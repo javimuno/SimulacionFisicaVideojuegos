@@ -6,8 +6,15 @@
 #include "WorldBounds.h"
 #include "ForceRegistry.h"
 #include "GravityFG.h"
+#include "WindFG.h"
+#include "WhirlwindFG.h"
+
 extern ForceRegistry* gForceReg;
 extern GravityFG* gGravity;
+extern WindFG* gWind;
+extern WhirlwindFG* gWhirl;
+
+
 
 using namespace physx;
 
@@ -106,6 +113,14 @@ void SimpleEmitter::update(float dt) {
 
         // Que reciba gravedad por fuerza:
         if (gForceReg && gGravity) gForceReg->add(p, gGravity);
+
+        //para el viento igual
+        if (gForceReg && gWind)    gForceReg->add(p, gWind);
+
+        //para el torbellino igual tambien
+        if (gForceReg && gWhirl) gForceReg->add(p, gWhirl);
+
+
 
         alive.push_back({ p, 0.0f });
     }

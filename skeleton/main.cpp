@@ -18,14 +18,27 @@
 #include "ForceGenerator.h"
 #include "GravityFG.h"
 #include "ForceRegistry.h"
+#include "WindFG.h"
+#include "WhirlwindFG.h"
+#include "ZoneSphere.h"
+
 
 //=========== GLOBALES =========
 
 //std::string display_text = "This is a test";
 // Crea los límites una vez
 WorldBounds gWorld(Vector3D(-200, -50, -200), Vector3D(200, 200, 200));
+
+//--fuerzas--
 ForceRegistry* gForceReg = nullptr;
+//--gravedad--
 GravityFG* gGravity = nullptr;
+//--viento--
+WindFG* gWind = nullptr;
+//--torbellino--
+WhirlwindFG* gWhirl = nullptr;
+
+
 
 //=========== MODO ===========
 enum class Mode { Projectiles, Emitters };
@@ -181,6 +194,14 @@ static void SpawnProjectile(float speed, float damping, physx::PxVec4 color, flo
 
 	//para que reciba F = m*g
 	if (gForceReg && gGravity) gForceReg->add(p, gGravity);
+
+	//para viento
+	if (gForceReg && gWind)    gForceReg->add(p, gWind);
+
+	//para torbellino
+	if (gForceReg && gWhirl) gForceReg->add(p, gWhirl);
+
+
 }
 
 //==================================
@@ -211,7 +232,21 @@ void initPhysics(bool interactive)
 
 	//setup de fuerzas-> IMPORTANTE SE DENOTA LA FUERZA AQUI 
 	gForceReg = new ForceRegistry();
-	gGravity = new GravityFG(Vector3D(0.0f, -9.8f, 0.0f));
+	gGravity = new GravityFG(Vector3D(0.0f, -0.0f, 0.0f));
+	gWind = new WindFG(Vector3D(8.0f, 0.0f, 0.0f), /*k1*/ 2.0f, /*k2*/ 0.0f); // viento suave +X
+	// Torbellino: esfera centro (2,4,0), radio 2
+	ZoneSphere whirlZone(Vector3D(2.0f, 4.0f, 0.0f), 20.0f);
+	// Parámetros: omega, updraft, radialIn, k1, k2
+	gWhirl = new WhirlwindFG(whirlZone,
+		/*omega*/   6.0f,
+		/*updraft*/ 10.0f,
+		/*radialIn*/0.5f,
+		/*k1*/      2.0f,
+		/*k2*/      0.0f);
+
+
+
+
 
 
 	// ======== PRACTICA 0: ESFERA EN ORIGEN + EJES========
@@ -317,6 +352,8 @@ void initPhysics(bool interactive)
 		gEmit3 = new SimpleEmitter(c3);
 	}
 
+
+
 	SetMode(Mode::Projectiles);
 
 }
@@ -392,9 +429,13 @@ void cleanupPhysics(bool interactive)
 	delete gEmit2; gEmit2 = nullptr;
 	delete gEmit3; gEmit3 = nullptr;
 
-	//fuerzas
+	//--fuerzas--
 	if (gGravity) { delete gGravity;  gGravity = nullptr; }
 	if (gForceReg) { delete gForceReg; gForceReg = nullptr; }
+	if (gWind) { delete gWind; gWind = nullptr; }
+	if (gWhirl) { delete gWhirl; gWhirl = nullptr; }
+
+
 
 	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
 	gScene->release();
@@ -528,6 +569,32 @@ case '-':
 	gTimeScale = std::max(0.1f, gTimeScale / 1.5f);
 	display_text = "TimeScale x" + std::to_string(gTimeScale);
 	break;
+
+case 'V': { //interruptor de viento
+	static bool windOn = true;           
+	windOn = !windOn;
+	if (gWind) gWind->setK1(windOn ? 2.0f : 0.0f);
+	display_text = windOn ? "Wind: ON (k1=2)" : "Wind: OFF";
+	break;
+}
+case 'X': { //hace el viento más fuerte
+	if (gWind) {
+		gWind->setWind(Vector3D(12.0f, 0.0f, 0.0f));
+		//por si se apaga el viento
+		gWind->setK1(2.0f);
+	}
+	display_text = "Wind: +X strong";
+	break;
+}
+case 'O': { // interruptor torbellino ON/OFF alterando k1
+	static bool whirlOn = true;
+	whirlOn = !whirlOn;
+	if (gWhirl) gWhirl->setK1(whirlOn ? 2.0f : 0.0f);
+	display_text = whirlOn ? "Whirlwind: ON" : "Whirlwind: OFF";
+	break;
+}
+
+
 
 default:
 	if (gMode == Mode::Projectiles) {

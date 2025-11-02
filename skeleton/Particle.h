@@ -37,8 +37,12 @@ public:
     // Para comprobar límites
     const Vector3D& getPosition() const { return pos; }
 
+    //--FUERZAS--
     void addForce(const Vector3D& f) { forceAccum += f; }
     void clearForces() { forceAccum = Vector3D(0, 0, 0); }
+
+    //viento (de momento)
+    const Vector3D& getVelocity() const { return vel; }
 
 #if ROMPIAXFANTASMA
     // Evita copias/moves accidentales que causarían doble deregistro
