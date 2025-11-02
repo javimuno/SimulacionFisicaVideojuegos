@@ -13,6 +13,7 @@ Particle::Particle(const Vector3D& Pos, const Vector3D& Vel,
     if (!std::isfinite(radius) || radius <= 0.0f) radius = 1.0f;
     renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(radius)), &pose, color); //{ 1.0f, 0.8f, 0.2f, 1.0f } color base cambiado p2
     RegisterRenderItem(renderItem);
+    forceAccum = Vector3D(0, 0, 0);
    
 }
 
@@ -46,16 +47,30 @@ void Particle::integrate(float dt)
 // v_{n+1} = v_n + a_n*dt
 void Particle::integrateEulerExplicit(float dt)
 {
+    ////ANTES DE FUERZAS
+    //pos = pos + vel * dt;
+    // vel = vel + acc * dt;
+
+    if (dt <= 0.0f) return;
+    Vector3D a_total = acc + (forceAccum * (1.0f / mass));
     pos = pos + vel * dt;
-    vel = vel + acc * dt;
+    vel = vel + a_total * dt;
+    
 }
 
 // v_{n+1} = v_n + a_n*dt
 // x_{n+1} = x_n + v_{n+1}*dt
 void Particle::integrateEulerSemiImplicit(float dt)
 {
-    vel = vel + acc * dt;
+    ////ANTES DE FUERZAS
+    //vel = vel + acc * dt;
+    //pos = pos + vel * dt;
+
+    if (dt <= 0.0f) return;
+    Vector3D a_total = acc + (forceAccum * (1.0f / mass));
+    vel = vel + a_total * dt;
     pos = pos + vel * dt;
+    
 }
 
 // v <- v * damping^dt

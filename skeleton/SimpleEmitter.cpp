@@ -4,6 +4,10 @@
 #include "SimpleEmitter.h"
 #include <cmath>
 #include "WorldBounds.h"
+#include "ForceRegistry.h"
+#include "GravityFG.h"
+extern ForceRegistry* gForceReg;
+extern GravityFG* gGravity;
 
 using namespace physx;
 
@@ -88,11 +92,21 @@ void SimpleEmitter::update(float dt) {
     for (int i = 0; i < quota; ++i) {
         Vector3D pos = samplePosition();
         Vector3D vel = sampleVelocityIsotropic();
-        Vector3D acc(0.0f, GY, 0.0f);
+        //Vector3D acc(0.0f, GY, 0.0f);
 
-        Particle* p = new Particle(pos, vel, acc, cfg.damping,
+        //ANTES DE FUERZAS
+
+       /* Particle* p = new Particle(pos, vel, acc, cfg.damping,
             IntegratorType::EulerSemiImplicit,
             1.0f, cfg.color, cfg.radius);
+        alive.push_back({ p, 0.0f });*/
+
+        Vector3D acc(0.0f, 0.0f, 0.0f); // sin g directa
+        Particle* p = new Particle(pos, vel, acc, cfg.damping, IntegratorType::EulerSemiImplicit, 1.0f, cfg.color, cfg.radius);
+
+        // Que reciba gravedad por fuerza:
+        if (gForceReg && gGravity) gForceReg->add(p, gGravity);
+
         alive.push_back({ p, 0.0f });
     }
 }

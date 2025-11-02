@@ -1,6 +1,6 @@
 #pragma once
-#include "RenderUtils.hpp"
 #include "core.hpp"
+#include "RenderUtils.hpp"
 #include "Vector3D.h"
 
 
@@ -34,9 +34,13 @@ public:
     float getMass() const { return mass; }
     void setMass(float m) { mass = m; }
 
-    // Para comprobar límites de “espacio de acción”
+    // Para comprobar límites
     const Vector3D& getPosition() const { return pos; }
 
+    void addForce(const Vector3D& f) { forceAccum += f; }
+    void clearForces() { forceAccum = Vector3D(0, 0, 0); }
+
+#if ROMPIAXFANTASMA
     // Evita copias/moves accidentales que causarían doble deregistro
     Particle(const Particle&) = delete;
     Particle& operator=(const Particle&) = delete;
@@ -44,6 +48,8 @@ public:
     Particle& operator=(Particle&&) = delete;
 
     void setOrigin(char o) { origin = o; }
+#endif // ROMPIAXFANTASMA
+
 
 private:
 private: char origin = '?';
@@ -64,5 +70,7 @@ private: char origin = '?';
     void integrateEulerSemiImplicit(float dt);
     void applyDamping(float dt);
     void syncPoseToRender();
+
+    Vector3D forceAccum; // acumulador de fuerzas del frame
 };
 

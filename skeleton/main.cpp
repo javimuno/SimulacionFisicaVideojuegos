@@ -15,12 +15,17 @@
 #include "Particle.h"
 #include "SimpleEmitter.h"
 #include "WorldBounds.h"
+#include "ForceGenerator.h"
+#include "GravityFG.h"
+#include "ForceRegistry.h"
 
 //=========== GLOBALES =========
 
 //std::string display_text = "This is a test";
 // Crea los límites una vez
 WorldBounds gWorld(Vector3D(-200, -50, -200), Vector3D(200, 200, 200));
+ForceRegistry* gForceReg = nullptr;
+GravityFG* gGravity = nullptr;
 
 //=========== MODO ===========
 enum class Mode { Projectiles, Emitters };
@@ -162,11 +167,20 @@ static void SpawnProjectile(float speed, float damping, physx::PxVec4 color, flo
 
 	Vector3D pos(eye.x, eye.y, eye.z);
 	Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);
-	Vector3D acc(0, -9.8f, 0);
+
+	//antes de fuerzas
+	/*Vector3D acc(0, -9.8f, 0);
 
 	gProjectiles.push_back(
 		new Particle(pos, vel, acc, damping, IntegratorType::EulerSemiImplicit, 1.0f, color, radius)
-	);
+	);*/
+
+	Vector3D acc(0, 0, 0); // no metemos la G de golpe sino que parte de no aceleración (nada de aceleraciones sin fuerza)
+	auto* p = new Particle(pos, vel, acc, damping, IntegratorType::EulerSemiImplicit, 1.0f, color, radius);
+	gProjectiles.push_back(p);
+
+	//para que reciba F = m*g
+	if (gForceReg && gGravity) gForceReg->add(p, gGravity);
 }
 
 //==================================
@@ -194,6 +208,11 @@ void initPhysics(bool interactive)
 	sceneDesc.filterShader = contactReportFilterShader;
 	sceneDesc.simulationEventCallback = &gContactReportCallback;
 	gScene = gPhysics->createScene(sceneDesc);
+
+	//setup de fuerzas-> IMPORTANTE SE DENOTA LA FUERZA AQUI 
+	gForceReg = new ForceRegistry();
+	gGravity = new GravityFG(Vector3D(0.0f, -9.8f, 0.0f));
+
 
 	// ======== PRACTICA 0: ESFERA EN ORIGEN + EJES========
 	{
@@ -299,7 +318,8 @@ void initPhysics(bool interactive)
 	}
 
 	SetMode(Mode::Projectiles);
-	}
+
+}
 
 
 // Function to configure what happens in each step of physics
@@ -315,13 +335,12 @@ void stepPhysics(bool interactive, double t)
 	//=======P1====
 	//if (p) p->integrate(static_cast<float>(t)); // usa el dt real, no 0.3
 
-	//=====CON SPAWNER
+	
 	// alterador de tiempo --->> De momento no funciona o no se me ocurre
 	float dt = static_cast<float>(t) * gTimeScale;
-	// Integra TODAS con dt real
 	
+	if (gForceReg) gForceReg->updateForces(dt);
 
-	
 
 	if (gMode == Mode::Projectiles) {
 		for (auto* p : gProjectiles) p->integrate(dt);
@@ -373,6 +392,9 @@ void cleanupPhysics(bool interactive)
 	delete gEmit2; gEmit2 = nullptr;
 	delete gEmit3; gEmit3 = nullptr;
 
+	//fuerzas
+	if (gGravity) { delete gGravity;  gGravity = nullptr; }
+	if (gForceReg) { delete gForceReg; gForceReg = nullptr; }
 
 	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
 	gScene->release();
