@@ -5,9 +5,11 @@
 #include <cmath>
 #include "WorldBounds.h"
 #include "ForceRegistry.h"
+#include "ForceGenerator.h"
 #include "GravityFG.h"
 #include "WindFG.h"
 #include "WhirlwindFG.h"
+
 
 extern ForceRegistry* gForceReg;
 extern GravityFG* gGravity;
@@ -138,4 +140,9 @@ void SimpleEmitter::cullOutside(const WorldBounds& world) {
             ++it;
         }
     }
+}
+
+void SimpleEmitter::registerForceForAlive(ForceRegistry* reg, ForceGenerator* fg) {
+    if (!reg || !fg) return;
+    for (auto& l : alive) reg->add(l.p, fg);
 }

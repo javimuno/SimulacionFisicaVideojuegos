@@ -20,6 +20,7 @@
     <ClCompile Include="WindFG.cpp" />
     <ClCompile Include="WhirlwindFG.cpp" />
     <ClCompile Include="ZoneSphere.cpp" />
+    <ClCompile Include="ExplosionFG.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.hpp" />
@@ -41,6 +42,7 @@
     <ClInclude Include="WindFG.h" />
     <ClInclude Include="WhirlwindFG.h" />
     <ClInclude Include="ZoneSphere.h" />
+    <ClInclude Include="ExplosionFG.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">

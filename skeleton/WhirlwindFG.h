@@ -18,7 +18,7 @@ public:
 
     void updateForce(Particle* p, float dt) override;
 
-    // Helpers por si quieres ajustar en runtime
+    // Helpers 
     ZoneSphere& zone() { return zone_; }
     const ZoneSphere& zone() const { return zone_; }
     void setOmega(float w) { omega_ = w; }

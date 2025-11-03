@@ -21,6 +21,7 @@
 #include "WindFG.h"
 #include "WhirlwindFG.h"
 #include "ZoneSphere.h"
+#include "ExplosionFG.h"
 
 
 //=========== GLOBALES =========
@@ -37,6 +38,8 @@ GravityFG* gGravity = nullptr;
 WindFG* gWind = nullptr;
 //--torbellino--
 WhirlwindFG* gWhirl = nullptr;
+//--expllosion--
+ExplosionFG* gExpl = nullptr;
 
 
 
@@ -204,6 +207,25 @@ static void SpawnProjectile(float speed, float damping, physx::PxVec4 color, flo
 
 }
 
+//helper para explosiones para poder reutilizarla 
+
+static void TriggerExplosionAt(const Vector3D& c) {
+	if (!gExpl) return;
+	gExpl->setCenter(c);
+	gExpl->setParams(/*R*/6.0f, /*K*/800.0f, /*tau*/0.8f);
+	gExpl->trigger();
+
+	if (!gForceReg) return;
+	for (auto* p : gProjectiles) {
+		gForceReg->remove(p, gExpl);
+		gForceReg->add(p, gExpl);
+	}
+	if (gEmit1) gEmit1->registerForceForAlive(gForceReg, gExpl);
+	if (gEmit2) gEmit2->registerForceForAlive(gForceReg, gExpl);
+	if (gEmit3) gEmit3->registerForceForAlive(gForceReg, gExpl);
+}
+
+
 //==================================
 
 // Initialize physics engine
@@ -231,8 +253,12 @@ void initPhysics(bool interactive)
 	gScene = gPhysics->createScene(sceneDesc);
 
 	//setup de fuerzas-> IMPORTANTE SE DENOTA LA FUERZA AQUI 
+	// 
+	//Registro de fuerzas
 	gForceReg = new ForceRegistry();
+	//gravedad
 	gGravity = new GravityFG(Vector3D(0.0f, -0.0f, 0.0f));
+	//Viento
 	gWind = new WindFG(Vector3D(8.0f, 0.0f, 0.0f), /*k1*/ 2.0f, /*k2*/ 0.0f); // viento suave +X
 	// Torbellino: esfera centro (2,4,0), radio 2
 	ZoneSphere whirlZone(Vector3D(2.0f, 4.0f, 0.0f), 20.0f);
@@ -243,6 +269,9 @@ void initPhysics(bool interactive)
 		/*radialIn*/0.5f, // fuerza de succion al centro si es 0 no hay o esta en el centro
 		/*k1*/      2.0f,  // (lineal)- > laminar
 		/*k2*/      0.0f);  //mas fuerte cuando mayor es vRel (turbulento)
+
+	//Explosion
+	gExpl = new ExplosionFG(Vector3D(0, 0, 0), /*R*/6.0f, /*K*/800.0f, /*tau*/0.8f);
 
 
 
@@ -375,7 +404,10 @@ void stepPhysics(bool interactive, double t)
 	
 	// alterador de tiempo --->> De momento no funciona o no se me ocurre
 	float dt = static_cast<float>(t) * gTimeScale;
-	
+
+	//para la explosion
+	if (gExpl) gExpl->advance(dt);
+		
 	if (gForceReg) gForceReg->updateForces(dt);
 
 
@@ -434,6 +466,8 @@ void cleanupPhysics(bool interactive)
 	if (gForceReg) { delete gForceReg; gForceReg = nullptr; }
 	if (gWind) { delete gWind; gWind = nullptr; }
 	if (gWhirl) { delete gWhirl; gWhirl = nullptr; }
+	if (gExpl) { delete gExpl; gExpl = nullptr; }
+
 
 
 
@@ -593,6 +627,25 @@ case 'O': { // interruptor torbellino ON/OFF alterando k1
 	display_text = whirlOn ? "Whirlwind: ON" : "Whirlwind: OFF";
 	break;
 }
+
+case 'M': {
+	// DISPARO DESDE CAMARA (meh)->reformar
+
+	/*auto* cam = GetCamera();
+	physx::PxVec3 eye = cam->getEye();
+	physx::PxVec3 dir = cam->getDir().getNormalized();
+	Vector3D c(eye.x + 80.0f * dir.x, eye.y + 80.0f * dir.y, eye.z + 80.0f * dir.z);*/
+
+
+	TriggerExplosionAt(Vector3D(0.0f, 0.0f, 0.0f));  // origen
+	display_text = "Explosion @ (0,0,0)";
+	break;
+}
+
+case 'N':
+	TriggerExplosionAt(Vector3D(2.0f, 4.0f, 0.0f)); //custom
+	display_text = "Explosion @ (2,4,0)";
+	break;
 
 
 

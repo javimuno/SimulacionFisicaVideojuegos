@@ -27,7 +27,7 @@ void WhirlwindFG::updateForce(Particle* p, float /*dt*/) {
         vTang = t * (omega_ * rlen);
     }
 
-    // Succión radial hacia el centro (opcional)
+    
     Vector3D vRad(0, 0, 0);
     if (radialIn_ > 0.0f && rlen > 1e-6f) {
         Vector3D dirIn = (rXZ * (-1.0f / rlen)); // hacia el centro en XZ

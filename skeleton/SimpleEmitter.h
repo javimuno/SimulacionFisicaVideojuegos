@@ -21,6 +21,9 @@ struct SimpleEmitterConfig {
     bool     active = false;      // inicia apagado
 };
 
+class ForceRegistry;
+class ForceGenerator;
+
 class SimpleEmitter {
 public:
     explicit SimpleEmitter(const SimpleEmitterConfig& cfg);
@@ -32,6 +35,8 @@ public:
     void clear();                            // borra TODAS sus partículas
     void cullOutside(const class WorldBounds& world);
     size_t aliveCount() const { return alive.size(); }
+    
+    void registerForceForAlive(ForceRegistry* reg, ForceGenerator* fg);
 
 private:
     struct Live {
