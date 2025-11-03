@@ -238,11 +238,11 @@ void initPhysics(bool interactive)
 	ZoneSphere whirlZone(Vector3D(2.0f, 4.0f, 0.0f), 20.0f);
 	// Parámetros: omega, updraft, radialIn, k1, k2
 	gWhirl = new WhirlwindFG(whirlZone,
-		/*omega*/   6.0f,
-		/*updraft*/ 10.0f,
-		/*radialIn*/0.5f,
-		/*k1*/      2.0f,
-		/*k2*/      0.0f);
+		/*omega*/   6.0f, // giro tangencial
+		/*updraft*/ 10.0f, //elevacion
+		/*radialIn*/0.5f, // fuerza de succion al centro si es 0 no hay o esta en el centro
+		/*k1*/      2.0f,  // (lineal)- > laminar
+		/*k2*/      0.0f);  //mas fuerte cuando mayor es vRel (turbulento)
 
 
 
