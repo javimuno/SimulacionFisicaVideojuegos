@@ -44,6 +44,9 @@ public:
     //viento (de momento)
     const Vector3D& getVelocity() const { return vel; }
 
+    // Setter para permitir escalado de velocidad desde Projectile
+    void setVelocity(const Vector3D& v) { vel = v; }
+
 #if ROMPIAXFANTASMA
     // Evita copias/moves accidentales que causarían doble deregistro
     Particle(const Particle&) = delete;
@@ -74,6 +77,10 @@ private: char origin = '?';
     void integrateEulerSemiImplicit(float dt);
     void applyDamping(float dt);
     void syncPoseToRender();
+   
+    
+   
+
 
     Vector3D forceAccum; // acumulador de fuerzas del frame
 };

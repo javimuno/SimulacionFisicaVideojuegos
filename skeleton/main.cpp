@@ -22,6 +22,8 @@
 #include "WhirlwindFG.h"
 #include "ZoneSphere.h"
 #include "ExplosionFG.h"
+#include "Projectile.h"
+#include "ParticleSystem.h"
 
 
 //=========== GLOBALES =========
@@ -78,13 +80,22 @@ RenderItem* gAxisZ = nullptr;
 float gTimeScale = 1.0f; //multiplicador de dt en la integración
 
 // Emitters (3 emisores) + helpers
+static ParticleSystem* gEmitSys = nullptr;
 static SimpleEmitter* gEmit1 = nullptr;
 static SimpleEmitter* gEmit2 = nullptr;
 static SimpleEmitter* gEmit3 = nullptr;
 static std::vector<Particle*> gProjectiles;
 
 static void ClearProjectiles() {
-	for (auto* p : gProjectiles) delete p;
+	for (auto* p : gProjectiles) {
+		if (gForceReg) {
+			if (gGravity) gForceReg->remove(p, gGravity);
+			if (gWind)    gForceReg->remove(p, gWind);
+			if (gWhirl)   gForceReg->remove(p, gWhirl);
+			if (gExpl)    gForceReg->remove(p, gExpl);
+		}
+		delete p;
+	}
 	gProjectiles.clear();
 }
 
@@ -188,14 +199,25 @@ static void SpawnProjectile(float speed, float damping,
 	Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);
 	Vector3D acc(0.0f, 0.0f, 0.0f);
 
-	Particle* p = new Particle(
+
+	ProjectileType ptype = (mass >= 2.0f) ? ProjectileType::Heavy : ProjectileType::Light;
+	Particle* p = new Projectile(
+		pos, vel, acc,
+		damping,
+		IntegratorType::EulerSemiImplicit,
+		mass,
+		color,
+		radius,
+		ptype
+	);
+	/*Particle* p = new Particle(
 		pos, vel, acc,
 		damping,
 		IntegratorType::EulerSemiImplicit,
 		mass,              
 		color,
 		radius
-	);
+	);*/
 
 	gProjectiles.push_back(p);
 	if (gForceReg && gGravity) gForceReg->add(p, gGravity);
@@ -382,7 +404,10 @@ void initPhysics(bool interactive)
 		gEmit3 = new SimpleEmitter(c3);
 	}
 
-
+	gEmitSys = new ParticleSystem(&gWorld);
+	gEmitSys->addEmitter(gEmit1);
+	gEmitSys->addEmitter(gEmit2);
+	gEmitSys->addEmitter(gEmit3);
 
 	SetMode(Mode::Projectiles);
 
@@ -419,13 +444,15 @@ void stepPhysics(bool interactive, double t)
 	}
 		// Emitters
 	else {
-		if (gMode == Mode::Emitters && !gProjectiles.empty()) ClearProjectiles();
+
+		if (gEmitSys) gEmitSys->update(dt);
+		/*if (gMode == Mode::Emitters && !gProjectiles.empty()) ClearProjectiles();
 		gEmit1->update(dt);
 		gEmit2->update(dt);
 		gEmit3->update(dt);
 		gEmit1->cullOutside(gWorld);
 		gEmit2->cullOutside(gWorld);
-		gEmit3->cullOutside(gWorld);
+		gEmit3->cullOutside(gWorld);*/
 	}
 		
 
@@ -658,14 +685,28 @@ case 'N':
 	display_text = "Explosion @ (2,4,0)";
 	break;
 
+case 'L': case 'l': {
+	if (gProjectiles.empty()) break;
+	Particle* p = gProjectiles.back();
+	int nG = 0, nW = 0, nWh = 0;
+	for (auto& r : gForceReg->regs) { // haz regs pública o añade getter
+		if (r.p != p) continue;
+		if (r.fg == gGravity)   ++nG;
+		if (r.fg == gWind)      ++nW;
+		if (r.fg == gWhirl) ++nWh;
+	}
+	printf("[DBG] last projectile -> Grav:%d Wind:%d Whirl:%d\n", nG, nW, nWh);
+	break;
+}
+
 
 
 default:
 	if (gMode == Mode::Projectiles) {
 		switch (toupper(key)) {
-		case 'B': SpawnProjectile(40.0f, 0.99f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
+		case 'B': SpawnProjectile(20.0f, 0.91f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
 		case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
-		case 'H': SpawnProjectile(8.0f, 0.99f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
+		case 'H': SpawnProjectile(20.0f, 1.0f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
 		case 'C': ClearProjectiles(); display_text = "Projectiles: clear"; break;
 		default: break;
 		}

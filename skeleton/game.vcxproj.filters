@@ -21,6 +21,8 @@
     <ClCompile Include="WhirlwindFG.cpp" />
     <ClCompile Include="ZoneSphere.cpp" />
     <ClCompile Include="ExplosionFG.cpp" />
+    <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.hpp" />
@@ -43,6 +45,8 @@
     <ClInclude Include="WhirlwindFG.h" />
     <ClInclude Include="ZoneSphere.h" />
     <ClInclude Include="ExplosionFG.h" />
+    <ClInclude Include="Projectile.h" />
+    <ClInclude Include="ParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">
