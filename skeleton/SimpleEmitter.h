@@ -19,6 +19,7 @@ struct SimpleEmitterConfig {
     float    rate = 6.0f;       // partículas por segundo
     int      maxAlive = 300;        // cap por emisor
     bool     active = false;      // inicia apagado
+    float mass = 1.0f;
 };
 
 class ForceRegistry;

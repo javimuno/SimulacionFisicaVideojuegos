@@ -111,7 +111,7 @@ void SimpleEmitter::update(float dt) {
         alive.push_back({ p, 0.0f });*/
 
         Vector3D acc(0.0f, 0.0f, 0.0f); // sin g directa
-        Particle* p = new Particle(pos, vel, acc, cfg.damping, IntegratorType::EulerSemiImplicit, 1.0f, cfg.color, cfg.radius);
+        Particle* p = new Particle(pos, vel, acc, cfg.damping, IntegratorType::EulerSemiImplicit, cfg.mass, cfg.color, cfg.radius);
 
         // Que reciba gravedad por fuerza:
         if (gForceReg && gGravity) gForceReg->add(p, gGravity);
