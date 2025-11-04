@@ -175,37 +175,35 @@ struct ProjectileSpec {
 //		+ "vs=" + std::to_string(spec.v_sim) + " m/s";
 //	return p;
 //}
-static void SpawnProjectile(float speed, float damping, physx::PxVec4 color, float radius)
+
+
+static void SpawnProjectile(float speed, float damping,
+	const physx::PxVec4& color, float radius, float mass)
 {
 	auto* cam = GetCamera();
-	PxVec3 eye = cam->getEye();
-	PxVec3 dir = cam->getDir().getNormalized();
+	const auto eye = cam->getEye();
+	const auto dir = cam->getDir().getNormalized();
 
 	Vector3D pos(eye.x, eye.y, eye.z);
 	Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);
+	Vector3D acc(0.0f, 0.0f, 0.0f);
 
-	//antes de fuerzas
-	/*Vector3D acc(0, -9.8f, 0);
+	Particle* p = new Particle(
+		pos, vel, acc,
+		damping,
+		IntegratorType::EulerSemiImplicit,
+		mass,              
+		color,
+		radius
+	);
 
-	gProjectiles.push_back(
-		new Particle(pos, vel, acc, damping, IntegratorType::EulerSemiImplicit, 1.0f, color, radius)
-	);*/
-
-	Vector3D acc(0, 0, 0); // no metemos la G de golpe sino que parte de no aceleración (nada de aceleraciones sin fuerza)
-	auto* p = new Particle(pos, vel, acc, damping, IntegratorType::EulerSemiImplicit, 1.0f, color, radius);
 	gProjectiles.push_back(p);
-
-	//para que reciba F = m*g
 	if (gForceReg && gGravity) gForceReg->add(p, gGravity);
-
-	//para viento
 	if (gForceReg && gWind)    gForceReg->add(p, gWind);
-
-	//para torbellino
-	if (gForceReg && gWhirl) gForceReg->add(p, gWhirl);
-
-
+	if (gForceReg && gWhirl)   gForceReg->add(p, gWhirl);
+	if (gExpl && gExpl->isActive() && gForceReg) gForceReg->add(p, gExpl);
 }
+
 
 //helper para explosiones para poder reutilizarla 
 
@@ -257,7 +255,7 @@ void initPhysics(bool interactive)
 	//Registro de fuerzas
 	gForceReg = new ForceRegistry();
 	//gravedad
-	gGravity = new GravityFG(Vector3D(0.0f, -0.0f, 0.0f));
+	gGravity = new GravityFG(Vector3D(0.0f, -9.8f, 0.0f));
 	//Viento
 	gWind = new WindFG(Vector3D(8.0f, 0.0f, 0.0f), /*k1*/ 2.0f, /*k2*/ 0.0f); // viento suave +X
 	// Torbellino: esfera centro (2,4,0), radio 2
@@ -348,6 +346,7 @@ void initPhysics(bool interactive)
 		c1.lifetime = 3.0f;
 		c1.damping = 0.99f;
 		c1.color = { 0.2f,0.6f,1.0f,1.0f };
+		c1.mass = 1.0f;
 		c1.radius = 0.12f;
 		c1.rate = 6.0f;     // pps
 		c1.maxAlive = 250;
@@ -361,6 +360,7 @@ void initPhysics(bool interactive)
 		c2.lifetime = 2.5f;
 		c2.damping = 0.995f;
 		c2.color = { 1,1,1,1 };
+		c2.mass = 3.0f;
 		c2.radius = 0.08f;
 		c2.rate = 8.0f;
 		c2.maxAlive = 200;
@@ -374,6 +374,7 @@ void initPhysics(bool interactive)
 		c3.lifetime = 1.6f;
 		c3.damping = 0.985f;
 		c3.color = { 1.0f,0.824f,0.2f,1.0f };
+		c3.mass = 0.1f;
 		c3.radius = 0.37f;
 		c3.rate = 4.0f;
 		c3.maxAlive = 180;
@@ -628,6 +629,16 @@ case 'O': { // interruptor torbellino ON/OFF alterando k1
 	break;
 }
 
+case 'G': {
+	if (!gGravity) break;
+	const Vector3D& cur = gGravity->getG();
+	const bool on = (cur.x != 0.0f) || (cur.y != 0.0f) || (cur.z != 0.0f);
+	gGravity->setG(on ? Vector3D(0.0f, 0.0f, 0.0f)
+		: Vector3D(0.0f, -9.8f, 0.0f));
+	display_text = on ? "Gravity: OFF" : "Gravity: ON";
+	break;
+}
+
 case 'M': {
 	// DISPARO DESDE CAMARA (meh)->reformar
 
@@ -652,9 +663,9 @@ case 'N':
 default:
 	if (gMode == Mode::Projectiles) {
 		switch (toupper(key)) {
-		case 'B': SpawnProjectile(40.0f, 0.99f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f); break; // bala (amarillo)
-		case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f); break; // pelota (blanco)
-		case 'H': SpawnProjectile(8.0f, 0.99f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f); break; // helio (azulado)
+		case 'B': SpawnProjectile(40.0f, 0.99f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
+		case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
+		case 'H': SpawnProjectile(8.0f, 0.99f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
 		case 'C': ClearProjectiles(); display_text = "Projectiles: clear"; break;
 		default: break;
 		}
