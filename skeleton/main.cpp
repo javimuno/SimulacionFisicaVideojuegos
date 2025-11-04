@@ -63,6 +63,24 @@ namespace {
 		Vector3D dir_; float magN_; float timeLeft_;
 	};
 }
+//lo mismo pero para emisores
+namespace {
+	class TimedKickFG_Emit : public ForceGenerator {
+	public:
+		TimedKickFG_Emit(const Vector3D& d, float N, float dur)
+			: magN_(N), timeLeft_(dur) {
+			const float n = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+			dir_ = (n > 0.0f) ? Vector3D(d.x / n, d.y / n, d.z / n) : Vector3D(0, 0, 0);
+		}
+		void updateForce(Particle* p, float dt) override {
+			if (timeLeft_ <= 0.0f) return;
+			p->addForce(dir_ * magN_);
+			timeLeft_ -= dt;
+		}
+	private:
+		Vector3D dir_; float magN_; float timeLeft_;
+	};
+}
 
 
 
@@ -170,7 +188,6 @@ static void SpawnProjectile(float speed, float damping,
 	const auto dir = cam->getDir().getNormalized();
 
 	Vector3D pos(eye.x, eye.y, eye.z);
-	/*Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);*/
 	Vector3D vel(0, 0, 0);
 	Vector3D acc(0.0f, 0.0f, 0.0f);
 
@@ -195,7 +212,7 @@ static void SpawnProjectile(float speed, float damping,
 	// Impulso por fuerza durante T para replicar 'speed' (sin v0 a dedo)
 	const float T = 0.12f;                           // duración del empuje (s)
 	/*const float N = p->getMass() * speed / T;  */      // F = m * (Av/T), con Av = speed
-	//CUANDO N ESTÁ DE ESTA FORMA HACE QUE INFLUYA LA MASA-> CONSERVAR PARA PROYECTO 
+	//con una fuerza fija como esta influye la masa
 	const float N = 180.0f;
 	Vector3D dirCam(dir.x, dir.y, dir.z);
 	auto* kick = new TimedKickFG(dirCam, N, T);
@@ -260,9 +277,9 @@ void initPhysics(bool interactive)
 	ZoneSphere whirlZone(Vector3D(2.0f, 4.0f, 0.0f), 20.0f);
 	// Parámetros: omega, updraft, radialIn, k1, k2
 	gWhirl = new WhirlwindFG(whirlZone,
-		/*omega*/   6.0f, // giro tangencial
-		/*updraft*/ 10.0f, //elevacion
-		/*radialIn*/0.5f, // fuerza de succion al centro si es 0 no hay o esta en el centro
+		/*omega*/   3.0f, // giro tangencial
+		/*updraft*/ 20.0f, //elevacion
+		/*radialIn*/2.0f, // fuerza de succion al centro si es 0 no hay o esta en el centro
 		/*k1*/      2.0f,  // (lineal)- > laminar
 		/*k2*/      0.0f);  //mas fuerte cuando mayor es vRel (turbulento)
 
@@ -285,7 +302,8 @@ void initPhysics(bool interactive)
 
 		Vector3D O(0.0f, 0.0f, 0.0f);
 		static physx::PxTransform poseO = ToPxT(O);
-		gOriginSphere = new RenderItem(CreateShape(physx::PxSphereGeometry(rCenter)), &poseO, { 1,1,1,1 }); // blanca-origen
+		gOriginSphere = new RenderItem(CreateShape(physx::PxSphereGeometry(rCenter)),
+			&poseO, { 1,1,1,1 }); // blanca-origen
 		RegisterRenderItem(gOriginSphere);
 
 		// Ejes: X (rojo), Y (verde), Z (azul)
@@ -317,7 +335,7 @@ void initPhysics(bool interactive)
 	// === P1 Act 2: aceleración constante ===
 	{
 		Vector3D startPos(0, 0, 0);
-		Vector3D startVel(0.5f, 0.5f, 0.0f);     // tu velocidad inicial de prueba
+		Vector3D startVel(0.5f, 0.5f, 0.0f);     // velocidad inicial de prueba
 		Vector3D accel(0.0f, -0.2f, 0.0f);       // aceleración (gravedad suave) _>cambiar aceleracion cambiar comportamiento AQUI JAVI AQUI
 		float damping = 1.0f;                    // sin damping aún
 
@@ -339,13 +357,13 @@ void initPhysics(bool interactive)
 	{
 		SimpleEmitterConfig c1; // Azul: fuente suave
 		c1.position = { 0,0,0 };
-		c1.posJitter = { 0.15f,0.15f,0.15f };
-		c1.speed = 8.0f;
-		c1.lifetime = 3.0f;
-		c1.damping = 0.99f;
+		c1.posJitter = { 3.15f,1.15f,2.15f };
+		c1.speed = 2.0f;
+		c1.lifetime = 6.0f;
+		c1.damping = 0.995f;
 		c1.color = { 0.2f,0.6f,1.0f,1.0f };
 		c1.mass = 1.0f;
-		c1.radius = 0.12f;
+		c1.radius = 0.32f;
 		c1.rate = 6.0f;     // pps
 		c1.maxAlive = 250;
 		c1.active = false;
@@ -355,11 +373,11 @@ void initPhysics(bool interactive)
 		c2.position = { 0,2,0 };
 		c2.posJitter = { 4.0f,0.4f,4.0f };
 		c2.speed = 1.2f;
-		c2.lifetime = 2.5f;
+		c2.lifetime = 6.5f;
 		c2.damping = 0.995f;
 		c2.color = { 1,1,1,1 };
-		c2.mass = 3.0f;
-		c2.radius = 0.08f;
+		c2.mass = 1.0f;
+		c2.radius = 0.38f;
 		c2.rate = 8.0f;
 		c2.maxAlive = 200;
 		c2.active = false;
@@ -367,14 +385,14 @@ void initPhysics(bool interactive)
 
 		SimpleEmitterConfig c3; // Amarillo: chispas
 		c3.position = { 3,3,0 };
-		c3.posJitter = { 0.08f,0.08f,0.08f };
-		c3.speed = 10.0f;
-		c3.lifetime = 1.6f;
-		c3.damping = 0.985f;
+		c3.posJitter = { 3.08f,1.08f,2.08f };
+		c3.speed = 1.0f;
+		c3.lifetime = 6.6f;
+		c3.damping = 0.995f;
 		c3.color = { 1.0f,0.824f,0.2f,1.0f };
-		c3.mass = 0.1f;
+		c3.mass = 1.1f;
 		c3.radius = 0.37f;
-		c3.rate = 4.0f;
+		c3.rate = 7.0f;
 		c3.maxAlive = 180;
 		c3.active = false;
 		gEmit3 = new SimpleEmitter(c3);
@@ -399,10 +417,6 @@ void stepPhysics(bool interactive, double t)
 
 	gScene->simulate(t);
 	gScene->fetchResults(true);
-
-	//=======P1====
-	//if (p) p->integrate(static_cast<float>(t)); // usa el dt real, no 0.3
-
 	
 	// alterador de tiempo --->> De momento no funciona o no se me ocurre
 	float dt = static_cast<float>(t) * gTimeScale;
@@ -420,15 +434,8 @@ void stepPhysics(bool interactive, double t)
 	}
 		// Emitters
 	else {
-
 		if (gEmitSys) gEmitSys->update(dt);
-		/*if (gMode == Mode::Emitters && !gProjectiles.empty()) ClearProjectiles();
-		gEmit1->update(dt);
-		gEmit2->update(dt);
-		gEmit3->update(dt);
-		gEmit1->cullOutside(gWorld);
-		gEmit2->cullOutside(gWorld);
-		gEmit3->cullOutside(gWorld);*/
+		
 	}
 		
 
@@ -450,15 +457,7 @@ void cleanupPhysics(bool interactive)
 	if (gAxisX) { DeregisterRenderItem(gAxisX);        gAxisX = nullptr; }
 	if (gAxisY) { DeregisterRenderItem(gAxisY);        gAxisY = nullptr; }
 	if (gAxisZ) { DeregisterRenderItem(gAxisZ);        gAxisZ = nullptr; }
-	// ======== FIN PRACTICA 0 ========
-
-	//=====P1===
-	//if (p) { delete p; p = nullptr; }
-
-	
-
-	//for (auto* it : gProjectiles) delete it;
-	//gProjectiles.clear();
+	// ======== FIN PRACTICA 0 ========	
 
 	// Emitters (objetos)a
 	delete gEmit1; gEmit1 = nullptr;
@@ -496,14 +495,15 @@ void keyPress(unsigned char key, const PxTransform& camera)
 
 switch (toupper(key))
 {
+	//modos (proyectil y emisores)
 case 'P': SetMode(Mode::Projectiles); break;
 case 'E': SetMode(Mode::Emitters);    break;
 
-case '+':
+case '+': //letnitud
 	gTimeScale = std::min(10.0f, gTimeScale * 1.5f);
 	display_text = "TimeScale x" + std::to_string(gTimeScale);
 	break;
-case '-':
+case '-': //rapidez
 	gTimeScale = std::max(0.1f, gTimeScale / 1.5f);
 	display_text = "TimeScale x" + std::to_string(gTimeScale);
 	break;
@@ -532,7 +532,7 @@ case 'O': { // interruptor torbellino ON/OFF alterando k1
 	break;
 }
 
-case 'G': {
+case 'G': { //interruptor gravedad
 	if (!gGravity) break;
 	const Vector3D& cur = gGravity->getG();
 	const bool on = (cur.x != 0.0f) || (cur.y != 0.0f) || (cur.z != 0.0f);
@@ -542,30 +542,22 @@ case 'G': {
 	break;
 }
 
-case 'M': {
-	// DISPARO DESDE CAMARA (meh)->reformar
-
-	/*auto* cam = GetCamera();
-	physx::PxVec3 eye = cam->getEye();
-	physx::PxVec3 dir = cam->getDir().getNormalized();
-	Vector3D c(eye.x + 80.0f * dir.x, eye.y + 80.0f * dir.y, eye.z + 80.0f * dir.z);*/
-
-
+case 'M': { //explosión en origen de coordenadas	
 	TriggerExplosionAt(Vector3D(0.0f, 0.0f, 0.0f));  // origen
 	display_text = "Explosion @ (0,0,0)";
 	break;
 }
 
-case 'N':
+case 'N': //explosion custom
 	TriggerExplosionAt(Vector3D(2.0f, 4.0f, 0.0f)); //custom
 	display_text = "Explosion @ (2,4,0)";
 	break;
 
-case 'L': case 'l': {
+case 'L': case 'l': { //debug para saber cuantos FG afectan a la ultima particula
 	if (gProjectiles.empty()) break;
 	Particle* p = gProjectiles.back();
 	int nG = 0, nW = 0, nWh = 0;
-	for (auto& r : gForceReg->regs) { // haz regs pública o añade getter
+	for (auto& r : gForceReg->regs) { 
 		if (r.p != p) continue;
 		if (r.fg == gGravity)   ++nG;
 		if (r.fg == gWind)      ++nW;
@@ -579,15 +571,16 @@ case 'L': case 'l': {
 
 default:
 	if (gMode == Mode::Projectiles) {
-		switch (toupper(key)) {
-		case 'B': SpawnProjectile(20.0f, 0.991f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
-		case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
-		case 'H': SpawnProjectile(20.0f, 0.991f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
+		switch (toupper(key)) { //aseguramos con v=0 para que se por fuerza (minidebug)
+		case 'B': SpawnProjectile(0, 0.991f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
+		case 'Z': SpawnProjectile(0, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
+		case 'H': SpawnProjectile(0, 0.991f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
 		case 'C': ClearProjectiles(); display_text = "Projectiles: clear"; break;
 		default: break;
 		}
 	}
 	else {
+		//emisores 1 y 2 normales 3 gauusiano
 		switch (toupper(key)) {
 		case '1': gEmit1->setActive(!gEmit1->isActive()); break;
 		case '2': gEmit2->setActive(!gEmit2->isActive()); break;

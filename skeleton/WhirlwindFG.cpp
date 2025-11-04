@@ -23,7 +23,7 @@ void WhirlwindFG::updateForce(Particle* p, float /*dt*/) {
     if (rlen > 1e-6f) {
         // tangente = rotación 90º de rXZ en XZ: (-z, 0, x) normalizada
         Vector3D t = Vector3D(-rXZ.z, 0.0f, rXZ.x) * (1.0f / rlen);
-        // v_tangencial = omega * r * t   (sólido rígido: velocidad y radio)
+        // v_tangencial = omega * r * t   
         vTang = t * (omega_ * rlen);
     }
 

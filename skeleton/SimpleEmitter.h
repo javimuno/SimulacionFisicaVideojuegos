@@ -11,7 +11,7 @@
 struct SimpleEmitterConfig {
     Vector3D position{ 0,0,0 };
     Vector3D posJitter{ 0,0,0 };     // +/- por eje
-    float    speed = 5.0f;          // velocidad escalar (isotrópica)
+    float    speed = 5.0f;          // velocidad escalar 
     float    lifetime = 2.0f;       // s
     float    damping = 0.99f;
     physx::PxVec4 color{ 0.2f,0.6f,1.0f,1.0f };
@@ -36,6 +36,7 @@ public:
     void clear();                            // borra TODAS sus partículas
     void cullOutside(const class WorldBounds& world);
     size_t aliveCount() const { return alive.size(); }
+    void setGaussianCone(bool on) { gaussianCone_ = on; }
     
     void registerForceForAlive(ForceRegistry* reg, ForceGenerator* fg);
 
@@ -49,11 +50,13 @@ private:
     std::mt19937 rng;
     float emit_accum = 0.0f;                 // acumulador rate*dt
     std::vector<Live> alive;
+    bool gaussianCone_ = false;
+
 
     // random helpers
     float randUniform(float a, float b);
     float randNormal(float mean, float sigma);
 
     Vector3D samplePosition();
-    Vector3D sampleVelocityIsotropic();      // dirección aleatoria en esfera * speed
+    Vector3D distribution();      // dirección aleatoria en esfera * speed
 };

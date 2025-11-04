@@ -2,6 +2,7 @@
 #define NOMINMAX
 #endif
 #include "SimpleEmitter.h"
+#include <random>
 #include <cmath>
 #include "WorldBounds.h"
 #include "ForceRegistry.h"
@@ -9,19 +10,24 @@
 #include "GravityFG.h"
 #include "WindFG.h"
 #include "WhirlwindFG.h"
+#include "ExplosionFG.h"
+
 
 
 extern ForceRegistry* gForceReg;
 extern GravityFG* gGravity;
 extern WindFG* gWind;
 extern WhirlwindFG* gWhirl;
+extern ExplosionFG* gExpl;
+extern SimpleEmitter* gEmit3; //el 3 será el gaussiano
 
 
 
 using namespace physx;
 
-static constexpr int   SPAWN_HARD_CAP = 24;     // seguridad: máximo por frame
+static constexpr int   SPAWN_HARD_CAP = 50;     // seguridad: máximo por frame que con mucho peta
 static constexpr float GY = -10.0f;
+static constexpr float M_PI = 3.14159265358979323846f;
 
 SimpleEmitter::SimpleEmitter(const SimpleEmitterConfig& c)
     : cfg(c), rng(std::random_device{}()) {
@@ -61,17 +67,49 @@ Vector3D SimpleEmitter::samplePosition() {
     };
 }
 
-Vector3D SimpleEmitter::sampleVelocityIsotropic() {
-    // muestrea una dirección aleatoria (gaussiana) y normaliza
-    Vector3D v(randNormal(0.f, 1.f), randNormal(0.f, 1.f), randNormal(0.f, 1.f));
-    float n = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (n < 1e-6f) v = { 0,1,0 };
-    else { v.x /= n; v.y /= n; v.z /= n; }
-    // pequeño sesgo hacia arriba para no formar “discos” planos
-    v.y = std::abs(v.y);
-    // escala por speed
-    v = v * cfg.speed;
-    return v;
+Vector3D SimpleEmitter::distribution() {
+    const float speed = cfg.speed;
+
+    // ----- Uniforme en esfera (por defecto) -----
+    auto dirUniformSphere = [&]() -> Vector3D {
+        const float u = randUniform(0.f, 1.f);
+        const float v = randUniform(0.f, 1.f);
+        const float phi = 2.0f * float(M_PI) * u;     // [0, 2pi)
+        const float cosT = 2.0f * v - 1.0f;            // uniforme en [-1, 1]
+        const float sinT = std::sqrt(std::max(0.f, 1.0f - cosT * cosT));
+        return Vector3D(sinT * std::cos(phi),  // x
+            cosT,                  // y
+            sinT * std::sin(phi)  // z
+        );
+        };
+
+    // ----- Gauss en cono alrededor de +Y (solo emisor 3) -----
+    auto dirGaussianConeY = [&]() -> Vector3D {
+        const float sigma = 0.35f;                    // abre/cierra el chorro
+        const float theta = std::fabs(randNormal(0.f, sigma)); // desviación angular
+        const float phi = 2.0f * float(M_PI) * randUniform(0.f, 1.f);
+
+        const float cosT = std::cos(theta);
+        const float sinT = std::sin(theta);
+        const float cphi = std::cos(phi);
+        const float sphi = std::sin(phi);
+
+        // Eje +Y; base ortonormal trivial U=(1,0,0), V=(0,0,1), W=(0,1,0)
+        Vector3D d(cphi * sinT,  // x
+            cosT,         // y
+            sphi * sinT   // z
+        );
+        // normaliza por robustez
+        const float n = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+        return (n > 1e-6f) ? Vector3D(d.x / n, d.y / n, d.z / n) : Vector3D(0, 1, 0);
+        };
+
+    // Por defecto uniforme; si este objeto ES el emisor 3, usa gauss en cono
+    extern SimpleEmitter* gEmit3;
+    Vector3D dir = (gaussianCone_) ? dirGaussianConeY() : dirUniformSphere();
+
+    // Devuelve velocidad = dirección * módulo
+    return dir * speed;
 }
 
 void SimpleEmitter::update(float dt) {
@@ -82,6 +120,13 @@ void SimpleEmitter::update(float dt) {
         it->p->integrate(dt);
         it->age += dt;
         if (it->age >= cfg.lifetime) {
+            // Quitar del ForceRegistry ANTES de borrar
+            if (gForceReg) {
+                if (gGravity) gForceReg->remove(it->p, gGravity);
+                if (gWind)    gForceReg->remove(it->p, gWind);
+                if (gWhirl)   gForceReg->remove(it->p, gWhirl);
+                if (gExpl)    gForceReg->remove(it->p, gExpl); 
+            }
             delete it->p;
             it = alive.erase(it);
         }
@@ -90,7 +135,7 @@ void SimpleEmitter::update(float dt) {
 
     if (!cfg.active) return;
 
-    // 2) emitir suave por rate (pps) con acumulador
+    // emisor suave
     emit_accum += cfg.rate * dt;
 
     int room = std::max(0, cfg.maxAlive - (int)alive.size());
@@ -99,32 +144,42 @@ void SimpleEmitter::update(float dt) {
     emit_accum -= quota;
 
     for (int i = 0; i < quota; ++i) {
+        //Posición
         Vector3D pos = samplePosition();
-        Vector3D vel = sampleVelocityIsotropic();
-        //Vector3D acc(0.0f, GY, 0.0f);
 
-        //ANTES DE FUERZAS
+        //sacamos solo la direccion
+        Vector3D v0 = distribution();
+        float speed = v0.length();
+        Vector3D dir = (speed > 1e-6f) ? (v0 * (1.0f / speed)) : Vector3D(0, 1, 0);
 
-       /* Particle* p = new Particle(pos, vel, acc, cfg.damping,
+        // nace sin velocidad 
+        Vector3D vel0(0.0f, 0.0f, 0.0f);
+        Vector3D acc0(0.0f, 0.0f, 0.0f);
+
+        Particle* p = new Particle(
+            pos, vel0, acc0,
+            cfg.damping,
             IntegratorType::EulerSemiImplicit,
-            1.0f, cfg.color, cfg.radius);
-        alive.push_back({ p, 0.0f });*/
+            cfg.mass,
+            cfg.color,
+            cfg.radius
+        );
 
-        Vector3D acc(0.0f, 0.0f, 0.0f); // sin g directa
-        Particle* p = new Particle(pos, vel, acc, cfg.damping, IntegratorType::EulerSemiImplicit, cfg.mass, cfg.color, cfg.radius);
-
-        // Que reciba gravedad por fuerza:
+        //  Fuerzas que afectan
         if (gForceReg && gGravity) gForceReg->add(p, gGravity);
-
-        //para el viento igual
         if (gForceReg && gWind)    gForceReg->add(p, gWind);
+        if (gForceReg && gWhirl)   gForceReg->add(p, gWhirl);
+        if (gForceReg && gExpl)    gForceReg->add(p, gExpl); // si la usas
 
-        //para el torbellino igual tambien
-        if (gForceReg && gWhirl) gForceReg->add(p, gWhirl);
+       //impulso por fuerza (F = m * (cfg.speed / dt) * dir)
+        if (dt > 0.0f) {
+            float k = p->getMass() * (cfg.speed / dt);
+            Vector3D F(dir.x * k, dir.y * k, dir.z * k);
+            p->addForce(F);
+        }
 
-
-
-        alive.push_back({ p, 0.0f });
+        //Almacenar en vivos
+        alive.push_back({ p, 0.0f });;
     }
 }
 
