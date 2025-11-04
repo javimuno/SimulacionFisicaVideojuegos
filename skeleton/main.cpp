@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 #include "core.hpp"
 #include "RenderUtils.hpp"
@@ -42,6 +43,26 @@ WindFG* gWind = nullptr;
 WhirlwindFG* gWhirl = nullptr;
 //--expllosion--
 ExplosionFG* gExpl = nullptr;
+
+//para aplicación de fuerzas de impulso en vez de velocidades base
+
+namespace {
+	class TimedKickFG : public ForceGenerator {
+	public:
+		TimedKickFG(const Vector3D& d, float N, float dur)
+			: magN_(N), timeLeft_(dur) {
+			const float n = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+			dir_ = (n > 0.0f) ? Vector3D(d.x / n, d.y / n, d.z / n) : Vector3D(0, 0, 0);
+		}
+		void updateForce(Particle* p, float dt) override {
+			if (timeLeft_ <= 0.0f) return;   // no toca p cuando expira
+			p->addForce(dir_ * magN_);
+			timeLeft_ -= dt;
+		}
+	private:
+		Vector3D dir_; float magN_; float timeLeft_;
+	};
+}
 
 
 
@@ -125,25 +146,7 @@ static void SetMode(Mode m) {
 
 //======================= FIN GLOBALES=================
 
-//==============TESTEO PARA SPAWNEAR
-static Vector3D nextSpawnPos()
-{
-	static int idx = 0;
-	float x = float((idx % 7) - 3) * 2.0f; // -6,-4,-2,0,2,4,6...
-	float y = 0.0f;
-	float z = 0.0f;
-	idx++;
-	return Vector3D(x, y, z);
-}
 
-
-
-// de la práctica 1.2 
-// === Fórmulas de real y simulada
-// 
-// ms = mr * (vr/vs)^2
-// gs = g  * (vs/vr)^2
-// 
 
 // === Proyectiles: conversión PxVec3 <-> Vector3D
 static Vector3D ToV3(const physx::PxVec3& v) { return Vector3D(v.x, v.y, v.z); }
@@ -158,36 +161,7 @@ struct ProjectileSpec {
 	float damping = 0.99f; // damping general
 };
 
-//static Particle* spawnProjectileFromCamera(const ProjectileSpec& spec, IntegratorType integ)
-//{
-//	using namespace physx;
-//	// camara
-//	auto* cam = GetCamera(); 
-//	PxVec3 eye = cam->getEye();
-//	PxVec3 dir = cam->getDir().getNormalized();
-//
-//	// Cálculo ms y gs segun las formulas
-//	const float ms = spec.m_real * (spec.v_real * spec.v_real) / (spec.v_sim * spec.v_sim);
-//	const float gs = spec.g_real * (spec.v_sim * spec.v_sim) / (spec.v_real * spec.v_real);
-//
-//	// Pos y vel iniciales
-//	Vector3D pos = ToV3(eye);
-//	Vector3D vel = ToV3(dir) * spec.v_sim;
-//
-//	//  Aceleración de la gravedad (negativas en balas suben) no aqui
-//	Vector3D acc(0.0f, -gs, 0.0f);
-//
-
-//
-//	// Texto informativo del proyectil generado
-//	display_text = std::string("Spawn [") + spec.name + "]: "
-//		+ "ms=" + std::to_string(ms) + " kg, "
-//		+ "gs=" + std::to_string(gs) + " m/s^2, "
-//		+ "vs=" + std::to_string(spec.v_sim) + " m/s";
-//	return p;
-//}
-
-
+//SPAWN DE PROYECTILES_______
 static void SpawnProjectile(float speed, float damping,
 	const physx::PxVec4& color, float radius, float mass)
 {
@@ -196,7 +170,8 @@ static void SpawnProjectile(float speed, float damping,
 	const auto dir = cam->getDir().getNormalized();
 
 	Vector3D pos(eye.x, eye.y, eye.z);
-	Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);
+	/*Vector3D vel(dir.x * speed, dir.y * speed, dir.z * speed);*/
+	Vector3D vel(0, 0, 0);
 	Vector3D acc(0.0f, 0.0f, 0.0f);
 
 
@@ -209,21 +184,22 @@ static void SpawnProjectile(float speed, float damping,
 		color,
 		radius,
 		ptype
-	);
-	/*Particle* p = new Particle(
-		pos, vel, acc,
-		damping,
-		IntegratorType::EulerSemiImplicit,
-		mass,              
-		color,
-		radius
-	);*/
+	);	
 
 	gProjectiles.push_back(p);
 	if (gForceReg && gGravity) gForceReg->add(p, gGravity);
 	if (gForceReg && gWind)    gForceReg->add(p, gWind);
 	if (gForceReg && gWhirl)   gForceReg->add(p, gWhirl);
 	if (gExpl && gExpl->isActive() && gForceReg) gForceReg->add(p, gExpl);
+
+	// Impulso por fuerza durante T para replicar 'speed' (sin v0 a dedo)
+	const float T = 0.12f;                           // duración del empuje (s)
+	/*const float N = p->getMass() * speed / T;  */      // F = m * (Av/T), con Av = speed
+	//CUANDO N ESTÁ DE ESTA FORMA HACE QUE INFLUYA LA MASA-> CONSERVAR PARA PROYECTO 
+	const float N = 180.0f;
+	Vector3D dirCam(dir.x, dir.y, dir.z);
+	auto* kick = new TimedKickFG(dirCam, N, T);
+	if (gForceReg) gForceReg->add(p, kick);
 }
 
 
@@ -516,107 +492,7 @@ void cleanupPhysics(bool interactive)
 void keyPress(unsigned char key, const PxTransform& camera)
 {
 	PX_UNUSED(camera);
-#if 0
-	//switch antes de P2
-//switch(toupper(key))
-//{
-////case 'B': break;
-////case ' ':	break;
-//case '1': // Euler explícito, SIN damping
-//{
-//	spawnParticle(IntegratorType::EulerExplicit, 1.0f,
-//		Vector3D(2.5f, 6.5f, 0.0f),
-//		Vector3D(0.0f, -9.8f, 0.0f));
-//	display_text = "Spawn: Euler EXP, damping=1.0 (sin damping)";
-//	break;
-//}
-//case '2': // Euler explícito, CON damping
-//{
-//	spawnParticle(IntegratorType::EulerExplicit, 0.90f,
-//		Vector3D(2.5f, 60.5f, 0.0f),
-//		Vector3D(0.0f, -9.8f, 0.0f));
-//	display_text = "Spawn: Euler EXP, damping=0.99";
-//	break;
-//}
-//case '3': // Euler semi-implícito, SIN damping
-//{
-//	spawnParticle(IntegratorType::EulerSemiImplicit, 1.0f,
-//		Vector3D(2.5f, 6.5f, 0.0f),
-//		Vector3D(0.0f, -9.8f, 0.0f));
-//	display_text = "Spawn: Euler SEMI, damping=1.0 (sin damping)";
-//	break;
-//}
-//case '4': // Euler semi-implícito, CON damping
-//{
-//	spawnParticle(IntegratorType::EulerSemiImplicit, 0.90f,
-//		Vector3D(2.5f, 60.5f, 0.0f),
-//		Vector3D(0.0f, -9.8f, 0.0f));
-//	display_text = "Spawn: Euler SEMI, damping=0.99";
-//	break;
-//}
-//case '+': {
-//	gTimeScale *= 1.5f;            // sube 50%
-//	if (gTimeScale > 10.0f) gTimeScale = 10.0f;  // cap
-//	display_text = "TimeScale x" + std::to_string(gTimeScale);
-//	break;
-//}
-//case '-': {
-//	gTimeScale /= 1.5f;            // baja 33%
-//	if (gTimeScale < 0.1f) gTimeScale = 0.1f;    // floor
-//	display_text = "TimeScale x" + std::to_string(gTimeScale);
-//	break;
-//}
-//	case 'C': // Clear: borra todas las partículas
-//{
 
-//	display_text = "Particulas limpiaditas toas toas toas";
-//	break;
-//}
-//	case 'B':  // Bala
-//	{
-//		ProjectileSpec S{
-//			"Bala",
-//			/* m_real */ 0.008f,     
-//			/* v_real */ 380.0f,     
-//			/* v_sim  */ 40.0f,      
-//			/* g_real */ 9.81f,
-//			/* damping */ 0.99f
-//		};
-//		spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
-//		break;
-//	}
-//	case 'Z':  // lanza patatas, o pelotas de beisbol
-//	{
-//		ProjectileSpec S{
-//			"Pelota",
-//			/* m_real */ 0.145f,     // ej. peso medio patata 145 g
-//			/* v_real */ 55.0f,      // ej. 55 m/s media de un lanzapatatas o 42 m/s beibsol
-//			/* v_sim  */ 20.0f,
-//			/* g_real */ 9.81f,
-//			/* damping */ 0.995f
-//		};
-//		spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
-//		break;
-//	}
-//	case 'H':  // lanza globos
-//	{
-//		ProjectileSpec S{
-//			"Helio",
-//			/* m_real */ 0.005f,
-//			/* v_real */ 10.0f,
-//			/* v_sim  */ 8.0f,
-//			/* g_real */ -9.81f,     // ponemos negativa para que suba
-//			/* damping */ 0.99f
-//		};
-//		spawnProjectileFromCamera(S, IntegratorType::EulerSemiImplicit);
-//		break;
-//	}
-//default:
-//	break;
-//}
-
-//Switch en P2  
-#endif // ANTESP1
 
 switch (toupper(key))
 {
@@ -704,9 +580,9 @@ case 'L': case 'l': {
 default:
 	if (gMode == Mode::Projectiles) {
 		switch (toupper(key)) {
-		case 'B': SpawnProjectile(20.0f, 0.91f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
+		case 'B': SpawnProjectile(20.0f, 0.991f, { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
 		case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
-		case 'H': SpawnProjectile(20.0f, 1.0f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
+		case 'H': SpawnProjectile(20.0f, 0.991f, { 0.7f,0.9f,1.0f,1.0f }, 0.8f,0.3f); break; // helio (azulado)
 		case 'C': ClearProjectiles(); display_text = "Projectiles: clear"; break;
 		default: break;
 		}
