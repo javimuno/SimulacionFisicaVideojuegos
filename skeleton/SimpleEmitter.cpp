@@ -11,6 +11,7 @@
 #include "WindFG.h"
 #include "WhirlwindFG.h"
 #include "ExplosionFG.h"
+#include <iostream>
 
 
 
@@ -24,6 +25,7 @@ extern SimpleEmitter* gEmit3; //el 3 será el gaussiano
 
 
 using namespace physx;
+using namespace std;
 
 static constexpr int   SPAWN_HARD_CAP = 50;     // seguridad: máximo por frame que con mucho peta
 static constexpr float GY = -10.0f;
@@ -44,7 +46,16 @@ void SimpleEmitter::changeRate(float delta) {
 }
 
 void SimpleEmitter::clear() {
-    for (auto& l : alive) { delete l.p; l.p = nullptr; };
+    // quitar del ForceRegistry ANTES de borrar
+    for (auto& l : alive) {
+        if (gForceReg) {
+            if (gGravity) gForceReg->remove(l.p, gGravity);
+            if (gWind)    gForceReg->remove(l.p, gWind);
+            if (gWhirl)   gForceReg->remove(l.p, gWhirl);
+            if (gExpl)    gForceReg->remove(l.p, gExpl);
+        }
+        delete l.p; l.p = nullptr;
+    }
     alive.clear();
     emit_accum = 0.0f;
 }
@@ -60,8 +71,13 @@ float SimpleEmitter::randNormal(float mean, float sigma) {
 }
 
 Vector3D SimpleEmitter::samplePosition() {
+    // X: uniforme por defecto; normal si se activa en cfg
+    float x = cfg.posGaussX
+        ? randNormal(cfg.position.x, std::max(0.0001f, cfg.posJitter.x))
+        : cfg.position.x + randUniform(-cfg.posJitter.x, +cfg.posJitter.x);
+
     return {
-        cfg.position.x + randUniform(-cfg.posJitter.x, +cfg.posJitter.x),
+        x,
         cfg.position.y + randUniform(-cfg.posJitter.y, +cfg.posJitter.y),
         cfg.position.z + randUniform(-cfg.posJitter.z, +cfg.posJitter.z)
     };
@@ -85,7 +101,7 @@ Vector3D SimpleEmitter::distribution() {
 
     // ----- Gauss en cono alrededor de +Y (solo emisor 3) -----
     auto dirGaussianConeY = [&]() -> Vector3D {
-        const float sigma = 0.35f;                    // abre/cierra el chorro
+        const float sigma = 0.01f;                    // abre/cierra el chorro
         const float theta = std::fabs(randNormal(0.f, sigma)); // desviación angular
         const float phi = 2.0f * float(M_PI) * randUniform(0.f, 1.f);
 
@@ -200,4 +216,47 @@ void SimpleEmitter::cullOutside(const WorldBounds& world) {
 void SimpleEmitter::registerForceForAlive(ForceRegistry* reg, ForceGenerator* fg) {
     if (!reg || !fg) return;
     for (auto& l : alive) reg->add(l.p, fg);
+}
+
+
+void SimpleEmitter::debugPrintHistogramX(int bins, int samples, float nsigma) {
+    if (bins < 5) bins = 5;
+    if (samples < 1000) samples = 1000;
+
+    const float mu = cfg.position.x;
+    const float sigma = std::max(0.0001f, cfg.posJitter.x);
+    const float minX = cfg.posGaussX ? (mu - nsigma * sigma) : (mu - cfg.posJitter.x);
+    const float maxX = cfg.posGaussX ? (mu + nsigma * sigma) : (mu + cfg.posJitter.x);
+    const float w = (maxX - minX) / bins;
+
+    std::vector<int> h(bins, 0);
+    double sum = 0.0, sum2 = 0.0;
+
+    for (int i = 0; i < samples; ++i) {
+        float x = cfg.posGaussX ? randNormal(mu, sigma)
+            : randUniform(mu - cfg.posJitter.x, mu + cfg.posJitter.x);
+        sum += x; sum2 += x * x;
+        int b = int((x - minX) / w);
+        if (b < 0) b = 0; else if (b >= bins) b = bins - 1;
+        h[b]++;
+    }
+
+    double mean = sum / samples;
+    double var = sum2 / samples - mean * mean;
+    double stdv = (var > 0) ? std::sqrt(var) : 0.0;
+
+    std::cout << "\n[Emitter3] X-dist: " << (cfg.posGaussX ? "Normal" : "Uniform")
+        << "  mu" << mean << "  sigma_est" << stdv << "  (cfg sigma=" << sigma << ")\n";
+
+    int maxc = 1;
+    for (int c : h) if (c > maxc) maxc = c;
+    const int barMax = 50;
+
+    for (int i = 0; i < bins; ++i) {
+        float xl = minX + i * w, xr = xl + w;
+        int bar = int(barMax * (h[i] / float(maxc)));
+        std::cout << "[" << i << "] " << xl << " .. " << xr << " | "
+            << std::string(bar, '#') << " (" << h[i] << ")\n";
+    }
+    std::cout.flush();
 }

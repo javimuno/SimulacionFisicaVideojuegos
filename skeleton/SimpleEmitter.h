@@ -20,6 +20,7 @@ struct SimpleEmitterConfig {
     int      maxAlive = 300;        // cap por emisor
     bool     active = false;      // inicia apagado
     float mass = 1.0f;
+    bool posGaussX = false;
 };
 
 class ForceRegistry;
@@ -39,7 +40,9 @@ public:
     void setGaussianCone(bool on) { gaussianCone_ = on; }
     
     void registerForceForAlive(ForceRegistry* reg, ForceGenerator* fg);
-
+    const SimpleEmitterConfig& getConfig() const { return cfg; }
+    void setConfig(const SimpleEmitterConfig& c) { cfg = c; }
+    void debugPrintHistogramX(int bins = 21, int samples = 10000, float nsigma = 3.0f);
 private:
     struct Live {
         Particle* p = nullptr;

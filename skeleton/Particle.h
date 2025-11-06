@@ -36,6 +36,7 @@ public:
 
     // Para comprobar límites
     const Vector3D& getPosition() const { return pos; }
+    void setPosition(const Vector3D& p) { pos = p; }
 
     //--FUERZAS--
     void addForce(const Vector3D& f) { forceAccum += f; }
