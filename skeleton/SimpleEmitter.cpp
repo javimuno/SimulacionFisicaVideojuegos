@@ -131,7 +131,7 @@ Vector3D SimpleEmitter::distribution() {
 void SimpleEmitter::update(float dt) {
     if (dt <= 0.0f) return;
 
-    // 1) integrar y borrar por lifetime
+    // integrar y borrar por lifetime
     for (auto it = alive.begin(); it != alive.end(); ) {
         it->p->integrate(dt);
         it->age += dt;

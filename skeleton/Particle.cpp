@@ -9,7 +9,7 @@ Particle::Particle(const Vector3D& Pos, const Vector3D& Vel,
     pose(PxTransform(Pos.x, Pos.y, Pos.z)), renderItem(nullptr)
     
 {    
-    // Esfera de radio 1.0 y amarillo pacman
+    // Esfera de radio 1.0 y amarilla
     if (!std::isfinite(radius) || radius <= 0.0f) radius = 1.0f;
     renderItem = new RenderItem(CreateShape(physx::PxSphereGeometry(radius)), &pose, color); //{ 1.0f, 0.8f, 0.2f, 1.0f } color base cambiado p2
     RegisterRenderItem(renderItem);
@@ -77,7 +77,7 @@ void Particle::integrateEulerSemiImplicit(float dt)
 void Particle::applyDamping(float dt)
 {
     if (damping < 1.0f) {
-        // std::pow del <cmath> viene desde Vector3D.h (ya incluido allí)
+        
         float factor = std::pow(damping, dt);
         vel = vel * factor;
     }

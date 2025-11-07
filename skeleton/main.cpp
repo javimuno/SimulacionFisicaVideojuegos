@@ -364,7 +364,7 @@ static void EnterTheaterMode() {
 	if (gWhirl)   delete gWhirl;
 
 	gGravity = new GravityFG(Vector3D(0.f, -1.8f, 0.f));                 // nieve
-	gWind = new WindFG(Vector3D(0.f, 0.f, 0.f), 0.1f, 0.0f);      // brisa
+	gWind = new WindFG(Vector3D(0.f, 0.f, 0.f), /*aqui*/0.1f, 0.0f);      // brisa (leve que se pira la nievesino)
 	ZoneSphere z(Vector3D(0.f, 10.f, 0.f), 4.0f);
 	gWhirl = new WhirlwindFG(z, 2.5f, 1.0f, 0.6f, 0.4f, 0.0f);         // decorativo
 
@@ -559,7 +559,7 @@ static void SpawnProjectile(float speed, float damping,
 	const float T = 0.12f;                           // duración del empuje (s)
 	/*const float N = p->getMass() * speed / T;  */      // F = m * (Av/T), con Av = speed
 	//con una fuerza fija como esta influye la masa
-	const float N = 180.0f;
+	const float N = 1800.0f;
 	Vector3D dirCam(dir.x, dir.y, dir.z);
 	auto* kick = new TimedKickFG(dirCam, N, T);
 	if (gForceReg) gForceReg->add(p, kick);
@@ -982,12 +982,12 @@ void keyPress(unsigned char key, const PxTransform& camera)
         return; // fin THEATER
     }
 
-    // 2) PROJECTILES (tu modo de pruebas de proyectiles sueltos)
+    // 2) PROYECTILES ( modo de pruebas de proyectiles sueltos)
     if (gMode == Mode::Projectiles) {
         switch (toupper(key)) {
-        case 'B': SpawnProjectile(20.0f, 0.91f,  { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
-        case 'Z': SpawnProjectile(20.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
-        case 'H': SpawnProjectile(20.0f, 1.0f,   { 0.7f,0.9f,1.0f,1.0f }, 0.80f,0.3f); break; // helio (azulado)
+        case 'B': SpawnProjectile(0.0f, 0.91f,  { 1.0f,0.8f,0.2f,1.0f }, 0.15f,1.0f); break; // bala (amarillo)
+        case 'Z': SpawnProjectile(0.0f, 0.995f, { 1.0f,1.0f,1.0f,1.0f }, 0.20f,3.0f); break; // pelota (blanco)
+        case 'H': SpawnProjectile(0.0f, 1.0f,   { 0.7f,0.9f,1.0f,1.0f }, 0.80f,0.3f); break; // helio (azulado)
         case 'C': ClearProjectiles(); display_text = "Projectiles: clear"; break;
 		case 'V': { //interruptor de viento
 			static bool windOn = true;
@@ -1026,7 +1026,7 @@ void keyPress(unsigned char key, const PxTransform& camera)
         return;
     }
 
-    // 3) EMITTERS (tu modo de emisores de partículas)
+    // 3) EMITTERS 
     // Teclas: 1/2/3 activan, [ ] ajustan rate, C limpia vivos
     if (gMode == Mode::Emitters) {
         switch (toupper(key)) {
@@ -1034,14 +1034,14 @@ void keyPress(unsigned char key, const PxTransform& camera)
         case '2': if (gEmit2) gEmit2->setActive(!gEmit2->isActive()); break;
         case '3': if (gEmit3) gEmit3->setActive(!gEmit3->isActive()); break;
 
-        case '[':
+        case '7':
             if (gEmit1 && gEmit1->isActive()) gEmit1->changeRate(-1.0f);
             if (gEmit2 && gEmit2->isActive()) gEmit2->changeRate(-1.0f);
             if (gEmit3 && gEmit3->isActive()) gEmit3->changeRate(-1.0f);
             display_text = "Emitters: rate -";
             break;
 
-        case ']':
+        case '8':
             if (gEmit1 && gEmit1->isActive()) gEmit1->changeRate(+1.0f);
             if (gEmit2 && gEmit2->isActive()) gEmit2->changeRate(+1.0f);
             if (gEmit3 && gEmit3->isActive()) gEmit3->changeRate(+1.0f);

@@ -27,7 +27,7 @@ public:
     void setAcceleration(const Vector3D& a) { acc = a; }
     void setDamping(float d) { damping = d; } // 0..1
 
-    // (Opcional) cambia integrador en runtime
+    // (Opcional) cambia integrador
     void setIntegrator(IntegratorType t) { integrator = t; }
 
     // getter y setter de masa
@@ -47,17 +47,6 @@ public:
 
     // Setter para permitir escalado de velocidad desde Projectile
     void setVelocity(const Vector3D& v) { vel = v; }
-
-#if ROMPIAXFANTASMA
-    // Evita copias/moves accidentales que causarían doble deregistro
-    Particle(const Particle&) = delete;
-    Particle& operator=(const Particle&) = delete;
-    Particle(Particle&&) = delete;
-    Particle& operator=(Particle&&) = delete;
-
-    void setOrigin(char o) { origin = o; }
-#endif // ROMPIAXFANTASMA
-
 
 private:
 private: char origin = '?';
