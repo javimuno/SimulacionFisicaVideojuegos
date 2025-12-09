@@ -150,6 +150,155 @@ static void SnapCameraToXY()
 	*cam = Snippets::Camera(eye, dir);
 }
 
+// ——— TEATRILLO (marco de la escena) ———————————————————————————————
+struct TheaterStage {
+	// tamaño (half extents): ancho=16, alto=9, profundidad=1.6
+	physx::PxVec3 half = physx::PxVec3(10.5f, 9.5f, 5.25f);
+	physx::PxVec3 center = physx::PxVec3(0.0f, 7.0f, 1.0f);
+
+	// rígidos pared
+	physx::PxRigidStatic* wallFloor = nullptr;
+	physx::PxRigidStatic* wallTop = nullptr;
+	physx::PxRigidStatic* wallLeft = nullptr;
+	physx::PxRigidStatic* wallRight = nullptr;
+	physx::PxRigidStatic* wallBack = nullptr;
+
+	// render de paredes
+	RenderItem* riFloor = nullptr;
+	RenderItem* riTop = nullptr;
+	RenderItem* riLeft = nullptr;
+	RenderItem* riRight = nullptr;
+	RenderItem* riBack = nullptr;
+
+	// aristas para que se diferencien las paredes
+	physx::PxRigidStatic* edgeL = nullptr;
+	physx::PxRigidStatic* edgeR = nullptr;
+	physx::PxRigidStatic* edgeT = nullptr;
+	physx::PxRigidStatic* edgeB = nullptr;
+	RenderItem* riEdgeL = nullptr;
+	RenderItem* riEdgeR = nullptr;
+	RenderItem* riEdgeT = nullptr;
+	RenderItem* riEdgeB = nullptr;
+
+	bool built = false;
+} gTheater;
+
+
+// creamso paredes rigidas y estáticas
+static physx::PxRigidStatic* MakeStaticBox(const physx::PxVec3& center,
+	const physx::PxVec3& half)
+{
+	using namespace physx;
+	PxTransform pose(PxVec3(center.x, center.y, center.z));
+	PxRigidStatic* actor = gPhysics->createRigidStatic(pose);
+	PxShape* shape = gPhysics->createShape(PxBoxGeometry(half.x, half.y, half.z), *gMaterial);
+	actor->attachShape(*shape);
+	shape->release();
+	gScene->addActor(*actor);
+	return actor;
+}
+
+// resgistro de objecto a partir de forma
+static RenderItem* RegisterStaticBoxRender(physx::PxRigidStatic* actor, const physx::PxVec4& color)
+{
+	using namespace physx;
+
+	// cogemos la forma
+	PxShape* shape = nullptr;
+	actor->getShapes(&shape, 1);
+	if (!shape) return nullptr;
+
+	// renderizamos objeto con su forma
+	RenderItem* ri = new RenderItem(shape, actor, color);
+	RegisterRenderItem(ri); 
+	return ri;
+}
+
+// deregistro
+static void SafeDeregister(RenderItem*& ri)
+{
+	if (ri) { DeregisterRenderItem(ri); ri = nullptr; }
+}
+
+static void BuildTheaterStage()
+{
+	if (gTheater.built) return;
+	using namespace physx;
+
+	const PxVec3 H = gTheater.half;
+	const PxVec3 C = gTheater.center;
+	const float t = 0.06f;   // grosor paredes
+	const float e = 0.03f;   // grosor de los strokes (aristas)
+
+	// colores
+	const PxVec4 cFloor = PxVec4(0.3f, 0.3f, 0.3f, 1.0f); // suelo más oscuro
+	const PxVec4 cTop = PxVec4(0.2f, 0.2f, 0.2f, 1.0f); // techo
+	const PxVec4 cSideL = PxVec4(0.1f, 0.1f, 0.1f, 1.0f); // izquierda
+	const PxVec4 cSideR = PxVec4(0.1f, 0.1f, 0.1f, 1.0f); // derecha
+	const PxVec4 cBack = PxVec4(0.0f, 0.0f, 0.0f, 1.0f); // fondo más claro
+	const PxVec4 cEdge = PxVec4(0.10f, 0.10f, 0.12f, 1.0f); // bordes oscuros
+
+	// 4 paredescon profundidad H.z 
+	gTheater.wallFloor = MakeStaticBox(PxVec3(C.x, C.y - H.y - t, C.z), PxVec3(H.x, t, H.z));
+	gTheater.riFloor = RegisterStaticBoxRender(gTheater.wallFloor, cFloor);
+
+	gTheater.wallTop = MakeStaticBox(PxVec3(C.x, C.y + H.y + t, C.z), PxVec3(H.x, t, H.z));
+	gTheater.riTop = RegisterStaticBoxRender(gTheater.wallTop, cTop);
+
+	gTheater.wallLeft = MakeStaticBox(PxVec3(C.x - H.x - t, C.y, C.z), PxVec3(t, H.y, H.z));
+	gTheater.riLeft = RegisterStaticBoxRender(gTheater.wallLeft, cSideL);
+
+	gTheater.wallRight = MakeStaticBox(PxVec3(C.x + H.x + t, C.y, C.z), PxVec3(t, H.y, H.z));
+	gTheater.riRight = RegisterStaticBoxRender(gTheater.wallRight, cSideR);
+
+	// Fondo bien al fondo
+	const float zBack = C.z - H.z - t;
+	gTheater.wallBack = MakeStaticBox(PxVec3(C.x, C.y, zBack), PxVec3(H.x + t, H.y + t, t));
+	gTheater.riBack = RegisterStaticBoxRender(gTheater.wallBack, cBack);
+
+	// aristas para diferenciar paredes
+	const float zFront = C.z + H.z + t;
+	gTheater.edgeL = MakeStaticBox(PxVec3(C.x - H.x - e * 0.5f, C.y, zFront), PxVec3(e * 0.5f, H.y + e, t));
+	gTheater.edgeR = MakeStaticBox(PxVec3(C.x + H.x + e * 0.5f, C.y, zFront), PxVec3(e * 0.5f, H.y + e, t));
+	gTheater.edgeT = MakeStaticBox(PxVec3(C.x, C.y + H.y + e * 0.5f, zFront), PxVec3(H.x + e, e * 0.5f, t));
+	gTheater.edgeB = MakeStaticBox(PxVec3(C.x, C.y - H.y - e * 0.5f, zFront), PxVec3(H.x + e, e * 0.5f, t));
+	gTheater.riEdgeL = RegisterStaticBoxRender(gTheater.edgeL, cEdge);
+	gTheater.riEdgeR = RegisterStaticBoxRender(gTheater.edgeR, cEdge);
+	gTheater.riEdgeT = RegisterStaticBoxRender(gTheater.edgeT, cEdge);
+	gTheater.riEdgeB = RegisterStaticBoxRender(gTheater.edgeB, cEdge);
+
+	gTheater.built = true;
+}
+
+static void DestroyTheaterStage()
+{
+	using namespace physx;
+	auto rem = [&](PxRigidStatic*& a) { if (!a) return; gScene->removeActor(*a); a->release(); a = nullptr; };
+
+	// render
+	SafeDeregister(gTheater.riFloor);
+	SafeDeregister(gTheater.riTop);
+	SafeDeregister(gTheater.riLeft);
+	SafeDeregister(gTheater.riRight);
+	SafeDeregister(gTheater.riBack);
+	SafeDeregister(gTheater.riEdgeL);
+	SafeDeregister(gTheater.riEdgeR);
+	SafeDeregister(gTheater.riEdgeT);
+	SafeDeregister(gTheater.riEdgeB);
+
+	// rígidos
+	rem(gTheater.wallFloor);
+	rem(gTheater.wallTop);
+	rem(gTheater.wallLeft);
+	rem(gTheater.wallRight);
+	rem(gTheater.wallBack);
+	rem(gTheater.edgeL);
+	rem(gTheater.edgeR);
+	rem(gTheater.edgeT);
+	rem(gTheater.edgeB);
+
+	gTheater.built = false;
+}
 
 
 												/*JUEGO-TEATRO ANTARTICA*/
@@ -419,6 +568,11 @@ static void EnterTheaterMode() {
 
 
 	SnapCameraToXY();
+	BuildTheaterStage();
+
+	// Caja roja de prueba en el centro; se verá si el render está bien enganchado:
+	auto* test = MakeStaticBox({ 0,0,0 }, { 2.5f,2.5f,2.05f });
+	RenderItem* testRI = RegisterStaticBoxRender(test, { 5.9f,0.2f,0.2f,1 });
 }
 
 static void ExitTheaterMode() {
@@ -434,6 +588,8 @@ static void ExitTheaterMode() {
 	// eliminamos los generadores de F del juego
 	delete gGravGame; gGravGame = nullptr;
 	delete gWindGame; gWindGame = nullptr;
+
+	DestroyTheaterStage();
 }
 
 											/*JUEGO-TEATRO ANTARTICA*/
