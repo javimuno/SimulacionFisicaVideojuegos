@@ -23,6 +23,7 @@
     <ClCompile Include="ExplosionFG.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="AnchoredSpringFG.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.hpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="ExplosionFG.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="AnchoredSpringFG.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">

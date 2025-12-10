@@ -27,6 +27,7 @@
 #include "Projectile.h"
 #include "ParticleSystem.h"
 #include "Render/Camera.h"
+#include "AnchoredSpringFG.h"
 
 
 
@@ -91,6 +92,47 @@ WindFG* gWind = nullptr;
 WhirlwindFG* gWhirl = nullptr;
 //--expllosion--
 ExplosionFG* gExpl = nullptr;
+
+// Varias bolitas colgantes
+static std::vector<Particle*>         gSpringBobs;   // partículas
+static std::vector<AnchoredSpringFG*> gSpringFGs;    // un muelle por bolita
+
+static void SpawnSpringBob(const Vector3D& anchor,
+	const Vector3D& startOffset, // desplazamiento respecto al anclaje
+	float k, float L0, float c)
+{
+	//particula p
+
+	Vector3D pos = anchor + startOffset;
+	Vector3D vel(0, 0, 0), acc(0, 0, 0);
+	float damping = 0.98f;
+	float mass = 1.0f;
+	const PxVec4 color(0.2f, 0.9f, 0.2f, 1.0f);
+	float radius = 0.12f;
+
+	Particle* p = new Particle(pos, vel, acc, damping,
+		IntegratorType::EulerSemiImplicit,
+		mass, color, radius);
+
+	// solo afectan gravedad y el muele a la particula
+	if (gForceReg && gGravity) gForceReg->add(p, gGravity);
+
+	AnchoredSpringFG* spr = new AnchoredSpringFG(anchor, k, L0, c, /*onlyExtend*/false);
+	gForceReg->add(p, spr);
+
+	// pusheamos particula y muelle
+	gSpringBobs.push_back(p);
+	gSpringFGs.push_back(spr);
+}
+
+static void ClearSpringBobs()
+{
+	for (auto* p : gSpringBobs) { delete p; }
+	gSpringBobs.clear();
+
+	for (auto* fg : gSpringFGs) { delete fg; }
+	gSpringFGs.clear();
+}
 
 //para aplicación de fuerzas de impulso en vez de velocidades base
 
@@ -571,8 +613,19 @@ static void EnterTheaterMode() {
 	BuildTheaterStage();
 
 	// Caja roja de prueba en el centro; se verá si el render está bien enganchado:
-	auto* test = MakeStaticBox({ 0,0,0 }, { 2.5f,2.5f,2.05f });
+	auto* test = MakeStaticBox({ 0,-2.0,0 }, { 1.5f,1.5f,1.5f });
 	RenderItem* testRI = RegisterStaticBoxRender(test, { 5.9f,0.2f,0.2f,1 });
+
+	// bolas de muelle repartidos por el techo
+	Vector3D A(-3.5f,3.5f, 0.0f);
+	Vector3D B(0.0f, 3.5f, 0.0f);
+	Vector3D C(3.5f, 3.5f, 0.0f);
+
+
+	//muelles
+	SpawnSpringBob(A, { 0.0f, 5.0f, 0.0f }, /*k*/55.f, /*L0*/1.0f, /*c*/1.5f);
+	SpawnSpringBob(B, { 0.0f, 5.0f, 0.0f }, /*k*/45.f, /*L0*/1.5f, /*c*/3.0f);
+	SpawnSpringBob(C, { 0.0f, 5.0f, 0.0f }, /*k*/55.f, /*L0*/1.0f, /*c*/1.5f);
 }
 
 static void ExitTheaterMode() {
@@ -590,6 +643,8 @@ static void ExitTheaterMode() {
 	delete gWindGame; gWindGame = nullptr;
 
 	DestroyTheaterStage();
+	ClearSpringBobs();
+
 }
 
 											/*JUEGO-TEATRO ANTARTICA*/
@@ -990,12 +1045,18 @@ void stepPhysics(bool interactive, double t)
 			(int)(gGame.power01 * 100.f),
 			gGame.wind.x,
 			gGame.score[0], gGame.score[1]);
-		display_text = buf;
-		break;
+		
+		
 
 		// sincroniza solo por si StartRound cambia posiciones
 		if (gPlayerVis[0]) gPlayerVis[0]->setPosition(gGame.pos[0]);
 		if (gPlayerVis[1]) gPlayerVis[1]->setPosition(gGame.pos[1]);
+
+		for (auto* p : gSpringBobs)              // integrar nuestras “free particles”
+			p->integrate(dt);
+
+		display_text = buf;
+		break;
 	}
 	}
 	
