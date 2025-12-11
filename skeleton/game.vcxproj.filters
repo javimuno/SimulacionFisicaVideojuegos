@@ -24,6 +24,7 @@
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="AnchoredSpringFG.cpp" />
+    <ClCompile Include="BuoyancyFG.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.hpp" />
@@ -49,6 +50,7 @@
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="AnchoredSpringFG.h" />
+    <ClInclude Include="BuoyancyFG.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">

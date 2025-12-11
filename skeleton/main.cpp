@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cmath>
 #include <Windows.h>
+#include <random>
 
 #include "core.hpp"
 #include "RenderUtils.hpp"
@@ -28,6 +29,7 @@
 #include "ParticleSystem.h"
 #include "Render/Camera.h"
 #include "AnchoredSpringFG.h"
+#include "BuoyancyFG.h"
 
 
 
@@ -93,9 +95,90 @@ WhirlwindFG* gWhirl = nullptr;
 //--expllosion--
 ExplosionFG* gExpl = nullptr;
 
-// Varias bolitas colgantes
+// Varias bolitas colgantes (muelle invisible)
 static std::vector<Particle*>         gSpringBobs;   // partículas
 static std::vector<AnchoredSpringFG*> gSpringFGs;    // un muelle por bolita
+
+//boyas e icebergs
+static std::vector<Particle*> gFloaters;
+static std::vector<BuoyancyFG*> gFloatersBuoy;
+static float gWaterLevel = -3.0f;            // plano del agua (suelo escena)
+
+//para dispersarlos
+static std::mt19937 gRand{ std::random_device{}() };
+static inline float frand(float a, float b) {
+	std::uniform_real_distribution<float> d(a, b);
+	return d(gRand);
+}
+
+static void SpawnFloaterEsfera(const Vector3D& pos,
+	float radius,              //radio
+	const PxVec4& color,     // color esfera
+	float rhoBody,             // densidad del cuerpo (kg/m3)
+	float rhoWater = 1000.0f,  // densidad del agua (kg/m3)
+	float damping = 0.993f)    // daming
+{
+	// Esfera: altura y volumen (para flotación)
+	const float height = 2.0f * radius;
+	const float volume = (4.0f / 3.0f) * 3.14159265f * radius * radius * radius;
+
+	// masa a partir de densidad del cuerpo (implícito en el temario)
+	const float mass = rhoBody * volume;
+
+	Vector3D vel(0, 0, 0), acc(0, 0, 0);
+	Particle* p = new Particle(pos, vel, acc,
+		damping, IntegratorType::EulerSemiImplicit,
+		mass, color, radius);
+
+	BuoyancyFG* b = new BuoyancyFG(gWaterLevel, height, volume, rhoWater);
+
+	if (gForceReg) {
+		if (gGravity) gForceReg->add(p, gGravity); // gravedad global
+		gForceReg->add(p, b);                      // flotación		
+	}
+
+	gFloaters.push_back(p);
+	gFloatersBuoy.push_back(b);
+}
+
+static void ScatterFloaters()
+{
+	// Rectángulo de dispersión
+	const float minX = -9.5f, maxX = 9.5f;
+	const float minZ = -10.0f, maxZ = 4.0f;
+
+	// --- BOYAS  ---
+	const int N_boyas = 5;
+	const float r_boya = 0.38f;
+	const PxVec4 col_boya(1.0f, 0.2f, 0.2f, 1.0f);  // rojo
+	const float rho_boya = 500.0f;   // densdisad
+	const float damp_boya = 0.993f;  // daming
+
+	for (int i = 0; i < N_boyas; ++i) {
+		const float x = frand(minX, maxX);
+		const float z = frand(minZ, maxZ);
+		const float y = gWaterLevel + frand(0.40f, 0.55f); // un poco por encima del agua
+		SpawnFloaterEsfera({ x,y,z }, r_boya, col_boya, rho_boya, 1000.0f, damp_boya);
+	}
+
+	// --- ICEBERGS ---
+	const int M_icebergs = 10;
+	const PxVec4 col_ice(0.8f, 0.95f, 1.0f, 1.0f); // color
+	const float rho_hielo = 920.0f;   // densidad hielo
+	// + damping que boyas -> más lento
+	const float damp_ice = 0.998f;
+
+	for (int i = 0; i < M_icebergs; ++i) {
+		const float x = frand(minX, maxX);
+		const float z = frand(minZ, maxZ);
+		const float y = gWaterLevel + frand(0.15f, 0.2f);
+
+		// tamaños variados
+		const float r = frand(0.30f, 0.8f);
+		SpawnFloaterEsfera({ x,y,z }, r, col_ice, rho_hielo, 1000.0f, damp_ice);
+	}
+}
+
 
 static void SpawnSpringBob(const Vector3D& anchor,
 	const Vector3D& startOffset, // desplazamiento respecto al anclaje
@@ -133,6 +216,9 @@ static void ClearSpringBobs()
 	for (auto* fg : gSpringFGs) { delete fg; }
 	gSpringFGs.clear();
 }
+
+
+
 
 //para aplicación de fuerzas de impulso en vez de velocidades base
 
@@ -194,7 +280,7 @@ static void SnapCameraToXY()
 
 // ——— TEATRILLO (marco de la escena) ———————————————————————————————
 struct TheaterStage {
-	// tamaño (half extents): ancho=16, alto=9, profundidad=1.6
+	// tamaño (mitades_expande hacia ambos lados).
 	physx::PxVec3 half = physx::PxVec3(10.5f, 9.5f, 5.25f);
 	physx::PxVec3 center = physx::PxVec3(0.0f, 7.0f, 1.0f);
 
@@ -264,53 +350,58 @@ static void SafeDeregister(RenderItem*& ri)
 
 static void BuildTheaterStage()
 {
-	if (gTheater.built) return;
 	using namespace physx;
 
-	const PxVec3 H = gTheater.half;
-	const PxVec3 C = gTheater.center;
-	const float t = 0.06f;   // grosor paredes
-	const float e = 0.03f;   // grosor de los strokes (aristas)
+	// Centro del del teatro y sus semiextensiones (x, y, z)
+	const PxVec3 C(0.0f, 9.5f, -4.0f);
+	const PxVec3 H(14.0f, 12.0f, 9.0f);
 
-	// colores
-	const PxVec4 cFloor = PxVec4(0.3f, 0.3f, 0.3f, 1.0f); // suelo más oscuro
-	const PxVec4 cTop = PxVec4(0.2f, 0.2f, 0.2f, 1.0f); // techo
-	const PxVec4 cSideL = PxVec4(0.1f, 0.1f, 0.1f, 1.0f); // izquierda
-	const PxVec4 cSideR = PxVec4(0.1f, 0.1f, 0.1f, 1.0f); // derecha
-	const PxVec4 cBack = PxVec4(0.0f, 0.0f, 0.0f, 1.0f); // fondo más claro
-	const PxVec4 cEdge = PxVec4(0.10f, 0.10f, 0.12f, 1.0f); // bordes oscuros
+	// Grosor de cada plano
+	const float t = 0.15f;
 
-	// 4 paredescon profundidad H.z 
-	gTheater.wallFloor = MakeStaticBox(PxVec3(C.x, C.y - H.y - t, C.z), PxVec3(H.x, t, H.z));
-	gTheater.riFloor = RegisterStaticBoxRender(gTheater.wallFloor, cFloor);
+	// Colores 
+	const PxVec4 cFloor(0.12f, 0.42f, 0.65f, 1.0f); // suelo: azul
+	const PxVec4 cTop(0.05f, 0.05f, 0.06f, 1.0f); // techo gris oscuro
+	const PxVec4 cSide(0.10f, 0.10f, 0.12f, 1.0f); // laterales
+	const PxVec4 cBack(0.02f, 0.02f, 0.03f, 1.0f); // fondo casi negro
+	const PxVec4 cEdge(0.8f, 0.8f, 0.8f, 1.0f); // marcos
 
-	gTheater.wallTop = MakeStaticBox(PxVec3(C.x, C.y + H.y + t, C.z), PxVec3(H.x, t, H.z));
-	gTheater.riTop = RegisterStaticBoxRender(gTheater.wallTop, cTop);
+	// Coordenadas de planos
+	const float xL = C.x - H.x - t;
+	const float xR = C.x + H.x + t;
+	const float yB = C.y - H.y - t;
+	const float yT = C.y + H.y + t;
+	const float zBack = C.z - H.z - t;   // pared trasera
+	const float zFront = C.z + H.z + 0.01f; // un pelín por delante para el marco
 
-	gTheater.wallLeft = MakeStaticBox(PxVec3(C.x - H.x - t, C.y, C.z), PxVec3(t, H.y, H.z));
-	gTheater.riLeft = RegisterStaticBoxRender(gTheater.wallLeft, cSideL);
+	// paredes
+	gTheater.wallBack = MakeStaticBox(PxVec3(C.x, yB + (yT - yB) * 0.5f, zBack), PxVec3(H.x + t, H.y + t, t));
+	gTheater.wallFloor = MakeStaticBox(PxVec3(C.x, yB, C.z), PxVec3(H.x + t, t, H.z));
+	gTheater.wallTop = MakeStaticBox(PxVec3(C.x, yT, C.z), PxVec3(H.x + t, t, H.z));
+	gTheater.wallLeft = MakeStaticBox(PxVec3(xL, C.y, C.z), PxVec3(t, H.y + t, H.z));
+	gTheater.wallRight = MakeStaticBox(PxVec3(xR, C.y, C.z), PxVec3(t, H.y + t, H.z));
 
-	gTheater.wallRight = MakeStaticBox(PxVec3(C.x + H.x + t, C.y, C.z), PxVec3(t, H.y, H.z));
-	gTheater.riRight = RegisterStaticBoxRender(gTheater.wallRight, cSideR);
-
-	// Fondo bien al fondo
-	const float zBack = C.z - H.z - t;
-	gTheater.wallBack = MakeStaticBox(PxVec3(C.x, C.y, zBack), PxVec3(H.x + t, H.y + t, t));
 	gTheater.riBack = RegisterStaticBoxRender(gTheater.wallBack, cBack);
+	gTheater.riFloor = RegisterStaticBoxRender(gTheater.wallFloor, cFloor);
+	gTheater.riTop = RegisterStaticBoxRender(gTheater.wallTop, cTop);
+	gTheater.riLeft = RegisterStaticBoxRender(gTheater.wallLeft, cSide);
+	gTheater.riRight = RegisterStaticBoxRender(gTheater.wallRight, cSide);
 
-	// aristas para diferenciar paredes
-	const float zFront = C.z + H.z + t;
-	gTheater.edgeL = MakeStaticBox(PxVec3(C.x - H.x - e * 0.5f, C.y, zFront), PxVec3(e * 0.5f, H.y + e, t));
-	gTheater.edgeR = MakeStaticBox(PxVec3(C.x + H.x + e * 0.5f, C.y, zFront), PxVec3(e * 0.5f, H.y + e, t));
-	gTheater.edgeT = MakeStaticBox(PxVec3(C.x, C.y + H.y + e * 0.5f, zFront), PxVec3(H.x + e, e * 0.5f, t));
-	gTheater.edgeB = MakeStaticBox(PxVec3(C.x, C.y - H.y - e * 0.5f, zFront), PxVec3(H.x + e, e * 0.5f, t));
+	//marco para no ver fondo
+	const float e = 2.0f;               // grosor del marco NOTA ACLRAR MIRAR LUEGO
+	const float zE = zFront;             // todos los marcos en el mismo z
+
+	gTheater.edgeL = MakeStaticBox(PxVec3(C.x - H.x - e * 0.5f, C.y, zE), PxVec3(e * 0.5f, H.y + e, 0.02f));
+	gTheater.edgeR = MakeStaticBox(PxVec3(C.x + H.x + e * 0.5f, C.y, zE), PxVec3(e * 0.5f, H.y + e, 0.02f));
+	gTheater.edgeT = MakeStaticBox(PxVec3(C.x, C.y + H.y + e * 0.5f, zE), PxVec3(H.x + e, e * 0.5f, 0.02f));
+	gTheater.edgeB = MakeStaticBox(PxVec3(C.x, C.y - H.y - e * 0.5f, zE), PxVec3(H.x + e, e * 0.5f, 0.02f));
+
 	gTheater.riEdgeL = RegisterStaticBoxRender(gTheater.edgeL, cEdge);
 	gTheater.riEdgeR = RegisterStaticBoxRender(gTheater.edgeR, cEdge);
 	gTheater.riEdgeT = RegisterStaticBoxRender(gTheater.edgeT, cEdge);
 	gTheater.riEdgeB = RegisterStaticBoxRender(gTheater.edgeB, cEdge);
-
-	gTheater.built = true;
 }
+
 
 static void DestroyTheaterStage()
 {
@@ -612,11 +703,11 @@ static void EnterTheaterMode() {
 	SnapCameraToXY();
 	BuildTheaterStage();
 
-	// Caja roja de prueba en el centro; se verá si el render está bien enganchado:
-	auto* test = MakeStaticBox({ 0,-2.0,0 }, { 1.5f,1.5f,1.5f });
+	// Caja roja de prueba 
+	auto* test = MakeStaticBox({ -2.50,-2.50,0 }, { .5f,.5f,.5f });
 	RenderItem* testRI = RegisterStaticBoxRender(test, { 5.9f,0.2f,0.2f,1 });
 
-	// bolas de muelle repartidos por el techo
+	// bolas de muelle sin muelle porque no se hacer un muelle
 	Vector3D A(-3.5f,3.5f, 0.0f);
 	Vector3D B(0.0f, 3.5f, 0.0f);
 	Vector3D C(3.5f, 3.5f, 0.0f);
@@ -626,6 +717,12 @@ static void EnterTheaterMode() {
 	SpawnSpringBob(A, { 0.0f, 5.0f, 0.0f }, /*k*/55.f, /*L0*/1.0f, /*c*/1.5f);
 	SpawnSpringBob(B, { 0.0f, 5.0f, 0.0f }, /*k*/45.f, /*L0*/1.5f, /*c*/3.0f);
 	SpawnSpringBob(C, { 0.0f, 5.0f, 0.0f }, /*k*/55.f, /*L0*/1.0f, /*c*/1.5f);
+
+	//icebergs y boyas
+	const float rhoWater = 1000.0f;
+	gWaterLevel = -3.0f;
+	ScatterFloaters();	
+
 }
 
 static void ExitTheaterMode() {
@@ -642,9 +739,13 @@ static void ExitTheaterMode() {
 	delete gGravGame; gGravGame = nullptr;
 	delete gWindGame; gWindGame = nullptr;
 
+	//eliminamos los decorados del juego
 	DestroyTheaterStage();
 	ClearSpringBobs();
-
+	for (auto* p : gFloaters)     delete p;
+	for (auto* b : gFloatersBuoy) delete b;
+	gFloaters.clear();
+	gFloatersBuoy.clear();
 }
 
 											/*JUEGO-TEATRO ANTARTICA*/
@@ -1052,9 +1153,9 @@ void stepPhysics(bool interactive, double t)
 		if (gPlayerVis[0]) gPlayerVis[0]->setPosition(gGame.pos[0]);
 		if (gPlayerVis[1]) gPlayerVis[1]->setPosition(gGame.pos[1]);
 
-		for (auto* p : gSpringBobs)              // integrar nuestras “free particles”
-			p->integrate(dt);
-
+		for (auto* p : gSpringBobs)  p->integrate(dt);        // integrar muelles
+		for (auto* p : gFloaters)   p->integrate(dt);			//integra boyas e icebergs
+		//for (auto* p : gIcebergs)   p->integrate(dt);		  // integrar icebergs
 		display_text = buf;
 		break;
 	}
