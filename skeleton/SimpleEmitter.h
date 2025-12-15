@@ -21,6 +21,8 @@ struct SimpleEmitterConfig {
     bool     active = false;      // inicia apagado
     float mass = 1.0f;
     bool posGaussX = false;
+    bool gaussX = false;
+    float sigmaX = 1.5f; //desviacion tip
 };
 
 class ForceRegistry;

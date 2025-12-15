@@ -12,6 +12,7 @@
 #include "WhirlwindFG.h"
 #include "ExplosionFG.h"
 #include <iostream>
+#include <algorithm>
 
 
 
@@ -72,15 +73,24 @@ float SimpleEmitter::randNormal(float mean, float sigma) {
 
 Vector3D SimpleEmitter::samplePosition() {
     // X: uniforme por defecto; normal si se activa en cfg
-    float x = cfg.posGaussX
-        ? randNormal(cfg.position.x, std::max(0.0001f, cfg.posJitter.x))
-        : cfg.position.x + randUniform(-cfg.posJitter.x, +cfg.posJitter.x);
+    float x;
+    if (cfg.posGaussX) {
+        const float xmin = cfg.position.x - cfg.posJitter.x;
+        const float xmax = cfg.position.x + cfg.posJitter.x;
+        const float sigma = std::max(0.0001f, 0.35f * cfg.posJitter.x); // campana visible
+        float g;
+        // normal truncada 
+        do { g = randNormal(cfg.position.x, sigma); } while (g < xmin || g > xmax);
+        x = g;
+    }
+    else {
+        x = cfg.position.x + randUniform(-cfg.posJitter.x, +cfg.posJitter.x);
+    }
+    // Y y Z uniformes
+    const float y = cfg.position.y + randUniform(-cfg.posJitter.y, +cfg.posJitter.y);
+    const float z = cfg.position.z + randUniform(-cfg.posJitter.z, +cfg.posJitter.z);
+    return { x, y, z };
 
-    return {
-        x,
-        cfg.position.y + randUniform(-cfg.posJitter.y, +cfg.posJitter.y),
-        cfg.position.z + randUniform(-cfg.posJitter.z, +cfg.posJitter.z)
-    };
 }
 
 Vector3D SimpleEmitter::distribution() {

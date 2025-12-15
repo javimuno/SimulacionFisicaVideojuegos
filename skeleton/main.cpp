@@ -665,7 +665,7 @@ static void EnterTheaterMode() {
 	// configurar emisores 1–3 como deco
 	if (gEmit1) {
 		SimpleEmitterConfig c{};
-		c.position = { 0.f, gStage.maxY - 0.3f, -1.0f };
+		c.position = { -3.f, gStage.maxY - 0.3f, -1.0f };
 		c.posJitter = { gStage.maxX * 0.9f, 0.6f, 1.2f };
 		c.speed = 3.0f;
 		c.lifetime = 10.0f;
@@ -682,18 +682,21 @@ static void EnterTheaterMode() {
 	}
 	if (gEmit2) {
 		auto c = gEmit1->getConfig();
-		c.position = { -5.f, gStage.maxY - 0.8f, +1.0f };
+		c.position = { 2.f, gStage.maxY - 0.8f, +1.0f };
 		gEmit2->clear();
 		gEmit2->setConfig(c);
 		gEmit2->setActive(true);
 	}
-	if (gEmit3) {
-		auto c = gEmit1->getConfig();
-		c.position = { +5.f, gStage.maxY - 1.0f, +1.5f };
+	if (gEmit3) { //gaussiano 
+		auto c = gEmit2->getConfig();
+		c.position = { +0.f, gStage.maxY - 1.0f, +1.5f };
+		c.posGaussX = true;          // <- activar Gauss en X
+		c.posJitter.x = 12.0f;
+		c.color = physx::PxVec4(0.45f, 0.45f, 0.95f, 1.0f); //azul oscuro para distinguirlo pero que no sea feo
 		gEmit3->clear();
 		gEmit3->setConfig(c);
 		gEmit3->setActive(true);
-		
+		gEmit3->debugPrintHistogramX(21, 20000, 3.0f); //para comprobar que el 3 es gaussiano
 	}
 
 	
