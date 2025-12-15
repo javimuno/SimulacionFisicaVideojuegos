@@ -95,6 +95,18 @@ WhirlwindFG* gWhirl = nullptr;
 //--expllosion--
 ExplosionFG* gExpl = nullptr;
 
+// ---- Kill plane común (si cae por debajo, se destruye) ----
+constexpr float Y_KILL = -30.0f;
+
+//mataparticulas por altura
+static inline void KillParticle(Particle*& p)
+{
+	if (!p) return;
+	if (gForceReg) gForceReg->removeAll(p); // quitar TODAS sus fuerzas antes
+	delete p;
+	p = nullptr;
+}
+
 // Varias bolitas colgantes (muelle invisible)
 static std::vector<Particle*>         gSpringBobs;   // partículas
 static std::vector<AnchoredSpringFG*> gSpringFGs;    // un muelle por bolita
@@ -210,7 +222,7 @@ static void SpawnSpringBob(const Vector3D& anchor,
 
 static void ClearSpringBobs()
 {
-	for (auto* p : gSpringBobs) { delete p; }
+	for (auto* p : gSpringBobs) { KillParticle(p); }
 	gSpringBobs.clear();
 
 	for (auto* fg : gSpringFGs) { delete fg; }
@@ -518,7 +530,7 @@ static Particle* MakeStaticBall(const Vector3D& pos, float radius, const physx::
 // borra todas las plataformas
 static void ClearPlatforms()
 {
-	for (auto* p : gPlatforms) delete p;
+	for (auto* p : gPlatforms) KillParticle(p);
 	gPlatforms.clear();
 }
 
@@ -727,7 +739,7 @@ static void EnterTheaterMode() {
 
 static void ExitTheaterMode() {
 	// limpiar proyectiles del juego
-	for (auto* p : gProjectiles) delete p;
+	for (auto* p : gProjectiles) { KillParticle(p); }
 	gProjectiles.clear();
 	//borrar jugadores
 	if (gPlayerVis[0]) { delete gPlayerVis[0]; gPlayerVis[0] = nullptr; }
@@ -742,8 +754,8 @@ static void ExitTheaterMode() {
 	//eliminamos los decorados del juego
 	DestroyTheaterStage();
 	ClearSpringBobs();
-	for (auto* p : gFloaters)     delete p;
-	for (auto* b : gFloatersBuoy) delete b;
+	for (auto* p : gFloaters) { KillParticle(p); }
+	for (auto* b : gFloatersBuoy) { delete b; } 
 	gFloaters.clear();
 	gFloatersBuoy.clear();
 }
@@ -772,7 +784,7 @@ static void ClearProjectiles() {
 			if (gGravGame) gForceReg->remove(p, gGravGame);
 			if (gWindGame) gForceReg->remove(p, gWindGame);
 		}
-		delete p;
+		KillParticle(p);
 	}
 	gProjectiles.clear();
 }
@@ -1065,7 +1077,7 @@ void stepPhysics(bool interactive, double t)
 		for (auto it = gProjectiles.begin(); it != gProjectiles.end(); ) {
 			Particle* p = *it;
 			p->integrate(dt);
-			if (gWorld.isOutside(p->getPosition())) { delete p; it = gProjectiles.erase(it); }
+			if (gWorld.isOutside(p->getPosition())) { KillParticle(p); it = gProjectiles.erase(it); }
 			else ++it;
 		}
 		break;
@@ -1101,15 +1113,24 @@ void stepPhysics(bool interactive, double t)
 		}
 
 		// Proyectiles del juego: integrar, fijar z=0 y limpiar si salen de los limites del juego
-		for (auto it = gProjectiles.begin(); it != gProjectiles.end();) {
+		for (auto it = gProjectiles.begin(); it != gProjectiles.end(); )
+		{
 			Particle* p = *it;
 			p->integrate(dt);
 			clamp2D(p);
-			if (outOfStage2D(p->getPosition())) {
-				delete p; it = gProjectiles.erase(it);
+
+			const auto pos = p->getPosition();
+			const bool deadKill = (pos.y < Y_KILL);
+			const bool deadOut = outOfStage2D(pos);
+
+			if (deadKill || deadOut) {
+				KillParticle(p);
+				it = gProjectiles.erase(it);
 				gGame.shotInFlight = false;
 			}
-			else ++it;
+			else {
+				++it;
+			}
 		}
 
 		// No deja disparar si no ha desaparecido el proyectil

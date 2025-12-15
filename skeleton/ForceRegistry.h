@@ -12,6 +12,8 @@ public:
     void updateForces(float dt); // limpia y aplica todos los FG
     struct Entry { Particle* p; ForceGenerator* fg; };
     std::vector<Entry> regs;
+    void removeAll(Particle* p);
+
 
 private:
     

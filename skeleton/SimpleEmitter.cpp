@@ -132,21 +132,24 @@ void SimpleEmitter::update(float dt) {
     if (dt <= 0.0f) return;
 
     // integrar y borrar por lifetime
-    for (auto it = alive.begin(); it != alive.end(); ) {
-        it->p->integrate(dt);
+    for (auto it = alive.begin(); it != alive.end(); )
+    {
+        Particle* p = it->p;
+        p->integrate(dt);
         it->age += dt;
-        if (it->age >= cfg.lifetime) {
-            // Quitar del ForceRegistry ANTES de borrar
-            if (gForceReg) {
-                if (gGravity) gForceReg->remove(it->p, gGravity);
-                if (gWind)    gForceReg->remove(it->p, gWind);
-                if (gWhirl)   gForceReg->remove(it->p, gWhirl);
-                if (gExpl)    gForceReg->remove(it->p, gExpl); 
-            }
-            delete it->p;
+
+        const auto pos = p->getPosition();
+        const bool deadTime = (it->age >= cfg.lifetime);
+        const bool deadKill = (pos.y < -30.0f); // mismo kill-plane que en main
+
+        if (deadTime || deadKill) {
+            if (gForceReg) gForceReg->removeAll(p);
+            delete p;
             it = alive.erase(it);
         }
-        else ++it;
+        else {
+            ++it;
+        }
     }
 
     if (!cfg.active) return;

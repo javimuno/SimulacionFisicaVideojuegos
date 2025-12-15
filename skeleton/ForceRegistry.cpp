@@ -22,3 +22,11 @@ void ForceRegistry::updateForces(float dt) {
     // 2) aplicar generadores (suman fuerzas a cada partícula)
     for (auto& e : regs) if (e.p && e.fg) e.fg->updateForce(e.p, dt);
 }
+
+void ForceRegistry::removeAll(Particle* p) {
+    regs.erase(
+        std::remove_if(regs.begin(), regs.end(),
+            [p](const Entry& e) { return e.p == p; }),
+        regs.end()
+    );
+}
