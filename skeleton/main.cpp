@@ -30,6 +30,7 @@
 #include "Render/Camera.h"
 #include "AnchoredSpringFG.h"
 #include "BuoyancyFG.h"
+#include "RigidWorld.h"
 
 
 
@@ -51,6 +52,9 @@ PxScene* gScene = NULL;
 ContactReportCallback gContactReportCallback;
 
 //=========== GLOBALES =========
+
+// mundo rigido
+static RigidWorld* gRigid = nullptr;
 
 
 // RenderItems de la Práctica 0
@@ -164,7 +168,7 @@ static void ScatterFloaters()
 	const float r_boya = 0.38f;
 	const PxVec4 col_boya(1.0f, 0.2f, 0.2f, 1.0f);  // rojo
 	const float rho_boya = 500.0f;   // densdisad
-	const float damp_boya = 0.993f;  // daming
+	const float damp_boya = 0.993f;  // damping
 
 	for (int i = 0; i < N_boyas; ++i) {
 		const float x = frand(minX, maxX);
@@ -626,9 +630,15 @@ static bool CheckHitAndOut() {
 
 	if (dist <= hitR) {
 		// en un futuro explosion (todavia solo manual)
+		// ya es el futuro :D
+		if (gRigid) gRigid->spawnDebrisExplosion(physx::PxVec3(t.x, t.y, t.z), 30, 16.0f);
+
+
 
 		gGame.score[gGame.current]++;
 		gGame.shotInFlight = false;
+
+
 		return true;
 	}
 	if (outOfStage2D(x)) {
@@ -927,7 +937,7 @@ void initPhysics(bool interactive)
 
 	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(),true,gPvd);
 
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+	
 
 	// For Solid Rigids +++++++++++++++++++++++++++++++++++++
 	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
@@ -937,6 +947,12 @@ void initPhysics(bool interactive)
 	sceneDesc.filterShader = contactReportFilterShader;
 	sceneDesc.simulationEventCallback = &gContactReportCallback;
 	gScene = gPhysics->createScene(sceneDesc);
+
+	//rigidos
+	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+	gRigid = new RigidWorld(gPhysics, gScene, gMaterial);
+	if (gRigid) gRigid->setContext(gPhysics, gScene, gMaterial);
+
 
 	//setup de fuerzas-> IMPORTANTE SE PONE LA FUERZA AQUI 
 	// 
@@ -1052,7 +1068,11 @@ void initPhysics(bool interactive)
 
 	SetMode(Mode::Theater);
 
-	
+	// --- Rigid world --------------------------------------------------
+	gRigid = new RigidWorld(gPhysics, gScene, gMaterial);
+
+	// por si se cambia de escena que no rompa (punteros)
+	if (gRigid) gRigid->setContext(gPhysics, gScene, gMaterial);
 }
 
 
@@ -1065,6 +1085,7 @@ void stepPhysics(bool interactive, double t)
 
 	gScene->simulate(t);
 	gScene->fetchResults(true);
+	if (gRigid) gRigid->update(t);
 	
 	// alterador de tiempo --->> De momento no funciona o no se me ocurre
 	float dt = static_cast<float>(t) * gTimeScale;
@@ -1221,6 +1242,8 @@ void cleanupPhysics(bool interactive)
 
 
 	// Rigid Body ++++++++++++++++++++++++++++++++++++++++++
+	if (gRigid) { gRigid->clear(); delete gRigid; gRigid = nullptr; }
+
 	gScene->release();
 	gDispatcher->release();
 	// -----------------------------------------------------
@@ -1306,6 +1329,14 @@ void keyPress(unsigned char key, const PxTransform& camera)
 		case 'M': { //explosin en origen de coordenadas	
 			TriggerExplosionAt(Vector3D(0.0f, 0.0f, 0.0f));  // origen
 			display_text = "Explosion @ (0,0,0)";
+			break;
+		}
+
+		case 'K':   // debug: lluvia de cubitos y bolias en el jugador impactado
+		{
+			const auto c = gGame.pos[gGame.current];
+			if (gRigid) gRigid->spawnDebrisExplosion(physx::PxVec3(c.x, c.y, c.z), 24, 13.0f);
+			display_text = "Rigid debris!";
 			break;
 		}
 

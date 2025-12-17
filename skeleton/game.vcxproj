@@ -267,6 +267,7 @@
     <ClCompile Include="RenderUtils.cpp" />
     <ClCompile Include="Render\Camera.cpp" />
     <ClCompile Include="Render\Render.cpp" />
+    <ClCompile Include="RigidWorld.cpp" />
     <ClCompile Include="SimpleEmitter.cpp" />
     <ClCompile Include="Vector3D.cpp" />
     <ClCompile Include="WhirlwindFG.cpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="RenderUtils.hpp" />
     <ClInclude Include="Render\Camera.h" />
     <ClInclude Include="Render\Render.h" />
+    <ClInclude Include="RigidWorld.h" />
     <ClInclude Include="SimpleEmitter.h" />
     <ClInclude Include="Vector3D.h" />
     <ClInclude Include="WhirlwindFG.h" />

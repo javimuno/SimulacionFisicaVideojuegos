@@ -25,6 +25,7 @@
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="AnchoredSpringFG.cpp" />
     <ClCompile Include="BuoyancyFG.cpp" />
+    <ClCompile Include="RigidWorld.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.hpp" />
@@ -51,6 +52,7 @@
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="AnchoredSpringFG.h" />
     <ClInclude Include="BuoyancyFG.h" />
+    <ClInclude Include="RigidWorld.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">
