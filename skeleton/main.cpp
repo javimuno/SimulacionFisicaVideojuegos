@@ -53,6 +53,9 @@ ContactReportCallback gContactReportCallback;
 
 //=========== GLOBALES =========
 
+//flag de modo RELEASE O NO
+constexpr bool kReleaseMode = true;
+
 // mundo rigido
 static RigidWorld* gRigid = nullptr;
 
@@ -126,6 +129,7 @@ static inline float frand(float a, float b) {
 	std::uniform_real_distribution<float> d(a, b);
 	return d(gRand);
 }
+
 
 static void SpawnFloaterEsfera(const Vector3D& pos,
 	float radius,              //radio
@@ -278,7 +282,7 @@ namespace {
 
 //=========== MODO ===========
 enum class Mode { Projectiles, Emitters, Theater };
-static Mode gMode = Mode::Theater;
+static Mode gMode = Mode::Emitters;
 
 //para coger la endemoniada camara de una p**-** vez
 static void SnapCameraToXY()
@@ -801,6 +805,22 @@ static void ClearProjectiles() {
 	}
 	gProjectiles.clear();
 }
+//semilimpiador de seguridad
+static void ClearScene()
+{
+	// proyectiles
+	ClearProjectiles();
+
+	// emisores
+	if (gEmit1) gEmit1->clear();
+	if (gEmit2) gEmit2->clear();
+	if (gEmit3) gEmit3->clear();
+
+	// rígidos
+	if (gRigid) gRigid->clear();
+
+
+}
 
 static void ClearEmitters() {
 	if (gEmit1) gEmit1->clear();
@@ -811,6 +831,8 @@ static void ClearEmitters() {
 static void SetMode(Mode m)
 {
 	if (gMode == m) return;
+
+	ClearScene();
 
 	// 
 	switch (gMode) {
@@ -1066,13 +1088,14 @@ void initPhysics(bool interactive)
 	gEmitSys->addEmitter(gEmit3);
 	
 
-	SetMode(Mode::Theater);
-
+	
 	// --- Rigid world --------------------------------------------------
 	gRigid = new RigidWorld(gPhysics, gScene, gMaterial);
 
 	// por si se cambia de escena que no rompa (punteros)
 	if (gRigid) gRigid->setContext(gPhysics, gScene, gMaterial);
+
+	SetMode(Mode::Theater);
 }
 
 
@@ -1216,6 +1239,7 @@ void cleanupPhysics(bool interactive)
 	PX_UNUSED(interactive);
 
 	//LIMPIEZA PRINCIPAL
+	ClearScene();
 	ClearProjectiles();
 	ClearEmitters();
 
@@ -1260,47 +1284,22 @@ void cleanupPhysics(bool interactive)
 void keyPress(unsigned char key, const PxTransform& camera)
 {
     PX_UNUSED(camera);
+	if (!kReleaseMode) {
+		// Cambios de modo y time scale (comunes)
+		switch (toupper(key)) {
+		case 'P': SetMode(Mode::Projectiles); return;
+		case 'E': SetMode(Mode::Emitters);    return;
+		case 'T': SetMode(Mode::Theater); SnapCameraToXY();    return;
 
-    // Cambios de modo y time scale (comunes)
-    switch (toupper(key)) {
-    case 'P': SetMode(Mode::Projectiles); return;
-    case 'E': SetMode(Mode::Emitters);    return;
-    case 'T': SetMode(Mode::Theater); SnapCameraToXY();    return;
+			/*case '+':
+				gTimeScale = std::min(10.0f, gTimeScale * 1.5f);
+				display_text = "TimeScale x" + std::to_string(gTimeScale);
+				return;
+			case '-':
+				gTimeScale = std::max(0.1f, gTimeScale / 1.5f);
+				display_text = "TimeScale x" + std::to_string(gTimeScale);
+				return;*/
 
-    case '+':
-        gTimeScale = std::min(10.0f, gTimeScale * 1.5f);
-        display_text = "TimeScale x" + std::to_string(gTimeScale);
-        return;
-    case '-':
-        gTimeScale = std::max(0.1f, gTimeScale / 1.5f);
-        display_text = "TimeScale x" + std::to_string(gTimeScale);
-        return;
-    default: break;
-    }
-
-    // ----- CONTROLES POR MODO -----
-
-    // 1) THEATER (2D, tiro por fuerzas)
-    if (gMode == Mode::Theater) {
-        // Tipo de proyectil
-        if (key == '1') { gGame.projType = 0; return; }
-        if (key == '2') { gGame.projType = 1; return; }
-        if (key == '3') { gGame.projType = 2; return; }
-
-        // Ángulo (no usamos WASD)
-        const float stepDeg = 1.5f;
-        switch (toupper(key)) {
-        case 'J':
-            gGame.angleDeg[gGame.current] -= stepDeg;
-            if (gGame.angleDeg[gGame.current] < 10.f) gGame.angleDeg[gGame.current] = 10.f;
-            return;
-        case 'L':
-            gGame.angleDeg[gGame.current] += stepDeg;
-            if (gGame.angleDeg[gGame.current] > 80.f) gGame.angleDeg[gGame.current] = 80.f;
-            return;
-        case 'R': // reiniciar ronda (útil para pruebas)
-            if (!gGame.shotInFlight) StartRound();
-            return;
 		case 'V': { //interruptor de viento
 			static bool windOn = true;
 			windOn = !windOn;
@@ -1331,6 +1330,32 @@ void keyPress(unsigned char key, const PxTransform& camera)
 			display_text = "Explosion @ (0,0,0)";
 			break;
 		}
+		default: break;
+		}
+	}
+    // ----- CONTROLES POR MODO -----
+
+    // 1) THEATER (2D, tiro por fuerzas)
+    if (gMode == Mode::Theater) {
+        // Tipo de proyectil
+        if (key == '1') { gGame.projType = 0; return; }
+        if (key == '2') { gGame.projType = 1; return; }
+        if (key == '3') { gGame.projType = 2; return; }
+
+        // Ángulo (no usamos WASD)
+        const float stepDeg = 1.5f;
+        switch (toupper(key)) {
+        case 'J':
+            gGame.angleDeg[gGame.current] -= stepDeg;
+            if (gGame.angleDeg[gGame.current] < 10.f) gGame.angleDeg[gGame.current] = 10.f;
+            return;
+        case 'L':
+            gGame.angleDeg[gGame.current] += stepDeg;
+            if (gGame.angleDeg[gGame.current] > 80.f) gGame.angleDeg[gGame.current] = 80.f;
+            return;
+        case 'R': // reiniciar ronda (útil para pruebas)
+            if (!gGame.shotInFlight) StartRound();
+            return;		
 
 		case 'K':   // debug: lluvia de cubitos y bolias en el jugador impactado
 		{

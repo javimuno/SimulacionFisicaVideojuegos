@@ -1,0 +1,158 @@
+﻿  AnchoredSpringFG.cpp
+  BuoyancyFG.cpp
+  callbacks.cpp
+  ExplosionFG.cpp
+  ForceGenerator.cpp
+  ForceRegistry.cpp
+  GravityFG.cpp
+  main.cpp
+  Particle.cpp
+  ParticleSystem.cpp
+  Projectile.cpp
+  RenderUtils.cpp
+  Camera.cpp
+  Render.cpp
+  RigidWorld.cpp
+  SimpleEmitter.cpp
+  Vector3D.cpp
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Camera.cpp(88,19): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Camera.cpp(90,19): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "Render/Render.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "Particle.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "callbacks.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+  WhirlwindFG.cpp
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "GravityFG.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "Projectile.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "AnchoredSpringFG.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "ExplosionFG.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "main.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+  WindFG.cpp
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "BuoyancyFG.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "WhirlwindFG.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "WindFG.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "RigidWorld.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "ForceRegistry.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "RenderUtils.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "ParticleSystem.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "SimpleEmitter.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\RigidWorld.cpp(92,67): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\RigidWorld.cpp(93,37): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(8,55): warning C5038: miembro de datos "Particle::integrator" se inicializará después de miembro de datos "Particle::mass"
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Render.cpp(399,13): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\BuoyancyFG.cpp(45,1): warning C5045: El compilador insertará la mitigación de Spectre para la carga de memoria si se especificó el modificador /Qspectre
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\BuoyancyFG.cpp(45,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\BuoyancyFG.cpp(39) : nota: el intervalo "subRatio" del índice se comprobó por comparación en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\BuoyancyFG.cpp(45,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\BuoyancyFG.cpp(45) : nota: suministra la llamada en esta línea
+  WorldBounds.cpp
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(57,1): warning C5045: El compilador insertará la mitigación de Spectre para la carga de memoria si se especificó el modificador /Qspectre
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(57,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(54) : nota: el intervalo "dt" del índice se comprobó por comparación en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(57,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(57) : nota: suministra la llamada en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(72,1): warning C5045: El compilador insertará la mitigación de Spectre para la carga de memoria si se especificó el modificador /Qspectre
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(72,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(69) : nota: el intervalo "dt" del índice se comprobó por comparación en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(72,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Particle.cpp(72) : nota: suministra la llamada en esta línea
+  ZoneSphere.cpp
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Render.cpp(136,1): warning C5045: El compilador insertará la mitigación de Spectre para la carga de memoria si se especificó el modificador /Qspectre
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Render.cpp(136,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Render.cpp(121) : nota: el intervalo "nbPolys" del índice se comprobó por comparación en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\Render\Render.cpp(136,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\foundation\PxVec3.h(105) : nota: suministra la carga de memoria en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(173,19): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(243,37): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\WindFG.cpp(16,1): warning C5045: El compilador insertará la mitigación de Spectre para la carga de memoria si se especificó el modificador /Qspectre
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\WindFG.cpp(16,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\WindFG.cpp(16) : nota: el intervalo "speed" del índice se comprobó por comparación en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\WindFG.cpp(16,1): warning C5045: D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\WindFG.cpp(16) : nota: suministra la llamada en esta línea
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(269,27): warning C5219: conversión implícita de "int" a "const float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(270,36): warning C5219: conversión implícita de "_Ty" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(270,36): warning C5219:         with
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(270,36): warning C5219:         [
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(270,36): warning C5219:             _Ty=int
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(270,36): warning C5219:         ]
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\main.cpp(550,14): warning C5219: conversión implícita de "int" a "float"; posible pérdida de datos
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\main.cpp(751,14): warning C4189: 'rhoWater': la variable local se ha inicializado pero no se hace referencia a ella
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\main.cpp(737,14): warning C4189: 'testRI': la variable local se ha inicializado pero no se hace referencia a ella
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\main.cpp(888,35): warning C4100: 'speed': parámetro sin referencia
+D:\Clones Github\SimulacionFisicaVideojuegos\skeleton\SimpleEmitter.cpp(32,24): warning C5264: "GY": no se usa la variable '"onst"
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220: "physx::PxLightCpuTask::mRefCount": un miembro de datos no estático con un tipo calificado volátil ya no implica
+D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19): warning C5220:          que los constructores de copia/movimiento generados por el compilador y los operadores de asignación de copia o movimiento no sean triviales
+  (compilando archivo de origen "WorldBounds.cpp")
+      D:\Clones Github\SimulacionFisicaVideojuegos\common\PhysX-3.4\PxShared\include\task\PxTask.h(326,19):
+      vea la declaración de 'physx::PxLightCpuTask::mRefCount'
+  
+  game.vcxproj -> D:\Clones Github\SimulacionFisicaVideojuegos\bin\game.exe
