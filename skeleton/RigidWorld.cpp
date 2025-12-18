@@ -51,7 +51,7 @@ RigidWorld::RBItem RigidWorld::addRenderForActor(PxRigidActor* a, const PxVec4& 
     r.pose = new PxTransform(a->getGlobalPose());      // pose en heap
     r.isStatic = isStatic;
 
-    // Tu RenderItem usa (shape, PxTransform*, color)
+    //RenderItem usa (shape, PxTransform*, color)
     r.ri = new RenderItem(shape, r.pose, color);
     RegisterRenderItem(r.ri);
 
@@ -118,9 +118,9 @@ void RigidWorld::spawnDebrisExplosion(const physx::PxVec3& center, int count, fl
         }
         else {
             // caja: medidas aleatorias pero con poca variación y pequeñas tabmien
-            const float hx = frand(0.08f, 0.14f);
-            const float hy = frand(0.08f, 0.14f);
-            const float hz = frand(0.08f, 0.14f);
+            const float hx = frand(0.08f, 0.24f);
+            const float hy = frand(0.08f, 0.24f);
+            const float hz = frand(0.08f, 0.24f);
             const float density = 600.0f;
             body = spawnBox(c, PxVec3(hx, hy, hz), density, col); // spawnBox
         }

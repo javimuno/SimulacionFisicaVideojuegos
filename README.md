@@ -1,8 +1,24 @@
-# SimulacionFisicaVideojuegos
-Repositorio de las prácticas de la asignatura de Simulación Física de Videojuegos
+# Theatre Antartica 2D❄️🎯
 
-En la carpeta skeleton estará vuestro código fuente
+Mini juego de **artillería 2D** dentro de un “teatrillo” polar donde lucharás contra un oponente para ser el Rey de la Antártida.
 
-Necesitaréis además descomprimir el archivo que se indica a continuación en la raíz del repositorio:
+Dos jugadores disparan por turnos ajustando **ángulo** y **potencia** para golpear al rival y convertirlo en confetti.
 
-Carpetas bin y common https://ucomplutense-my.sharepoint.com/:f:/g/personal/liagar05_ucm_es/ElNxHPmZVj9Ni9-8FKTKp7cBJHAarnL3vvEvG50z0QMrzg
+También habrás de tener en cuenta el sentido y la magnitud del viento para acertar con el proyectil que elijas.
+
+Abajo verás un **HUD** con el turno, tipo de proyectil, ángulo, potencia y viento.
+
+---
+
+## 🎮 Controles
+
+| Acción                                    | Tecla(s)              |
+|------------------------------------------ |-----------------------|
+| Ajustar **ángulo** de disparo             | **J** ←  /  → **L**   |
+| **Cargar potencia** (0–100%)              | Mantén **Espacio**    |
+| **Disparar**                              | Suelta **Espacio**    |
+| Cambiar **tipo de proyectil**             | **1** / **2** / **3** |
+| Reiniciar ronda (cambia el viento )       | **R**                 |
+
+---
+🎯**Apunten, ajusten, ¡ FUEGO !**🎯

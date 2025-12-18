@@ -672,7 +672,7 @@ static void EnterTheaterMode() {
 	if (gWhirl)   delete gWhirl;
 
 	gGravity = new GravityFG(Vector3D(0.f, -1.8f, 0.f));                 // nieve
-	gWind = new WindFG(Vector3D(0.f, 0.f, 0.f), /*aqui*/0.1f, 0.0f);      // brisa (leve que se pira la nievesino)
+	gWind = new WindFG(Vector3D(0.3f, 0.f, 0.f), /*aqui*/0.1f, 0.0f);      // brisa (leve que se pira la nievesino)
 	ZoneSphere z(Vector3D(0.f, 10.f, 0.f), 4.0f);
 	gWhirl = new WhirlwindFG(z, 2.5f, 1.0f, 0.6f, 0.4f, 0.0f);         // decorativo
 
